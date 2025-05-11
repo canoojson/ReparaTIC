@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 @Serializable
 data class Incidencia(
     @SerialName(value = "idIncidencia")
-    val idIncidencia: Int,
+    val idIncidencia: Int? = null,
     @SerialName(value = "tipo")
     val tipo: String,
     @SerialName(value="fecha_incidencia")
@@ -27,7 +27,7 @@ data class Incidencia(
     @SerialName(value = "estado")
     val estado: Estado,
     @SerialName(value="responsable")
-    val responsable: Responsable,
+    val responsable: Profesor,
     @SerialName("fecha_resolucion")
     val fecha_resolucion: String,
     @SerialName("tiempo_invertido")
