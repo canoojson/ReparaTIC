@@ -15,19 +15,19 @@ data class Incidencia(
     @SerialName(value="fecha_introduccion")
     val fecha_introduccion: String,
     @SerialName(value = "profesor")
-    val profesor: Profesor,
+    val profesor: Profesor?,
     @SerialName(value = "departamento")
-    val departamento: Departamento,
+    val departamento: Departamento?,
     @SerialName(value = "ubicacion")
-    val ubicacion: Ubicacion,
+    val ubicacion: Ubicacion?,
     @SerialName(value = "descripcion")
     val descripcion: String,
     @SerialName(value = "observaciones")
     val observaciones: String,
     @SerialName(value = "estado")
-    val estado: Estado,
+    val estado: Estado?,
     @SerialName(value="responsable")
-    val responsable: Profesor,
+    val responsable: Profesor?,
     @SerialName("fecha_resolucion")
     val fecha_resolucion: String,
     @SerialName("tiempo_invertido")
