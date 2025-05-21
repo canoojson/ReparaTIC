@@ -6,11 +6,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Permiso(
     @SerialName(value = "codPermiso")
-    val codPermiso: Int? = null,
+    val codPermiso: Int,
 
     @SerialName(value = "descrip")
     val descrip: String,
 
     @SerialName(value = "roles")
-    val roles: List<Rol>
+    val roles: List<Rol>?
 )

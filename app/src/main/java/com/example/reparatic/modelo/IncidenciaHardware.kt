@@ -6,11 +6,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class IncidenciaHardware(
     @SerialName("modelo")
-    val modelo: String,
+    var modelo: String,
 
     @SerialName("num_serie")
-    val numSerie: String,
+    var numSerie: String,
 
     @SerialName("tipoHw")
-    val tipoHw: TiposHw
+    var tipoHw: TiposHw
 )

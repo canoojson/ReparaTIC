@@ -5,12 +5,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class IncidenciaSoftware(
-    @SerialName("SO")
-    val SO: String,
+    @SerialName("so")
+    var SO: String,
 
     @SerialName("software")
-    val software: String,
+    var software: String,
 
     @SerialName("clave")
-    val clave: String
+    var clave: String
 )

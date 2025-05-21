@@ -4,10 +4,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TiposHw(
-    @SerialName("idTipoHw")
-    val idTipoHw: Int,
-
-    @SerialName("descrip")
-    var descrip: String
+data class LoginRequest(
+    @SerialName("username")
+    val username: String,
+    @SerialName("pwd")
+    val pwd: String
 )
+
+

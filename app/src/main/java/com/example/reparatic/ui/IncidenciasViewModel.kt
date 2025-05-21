@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.reparatic.IncidenciasAplicacion
+import com.example.reparatic.ReparaTICAplicacion
 import com.example.reparatic.datos.IncidenciaRepositorio
 import com.example.reparatic.modelo.Incidencia
 import kotlinx.coroutines.launch
@@ -30,10 +30,10 @@ sealed interface IncidenciaUIState {
 class IncidenciaViewModel(private val incidenciaRepositorio: IncidenciaRepositorio): ViewModel() {
     var incidenciaUIState: IncidenciaUIState by mutableStateOf(IncidenciaUIState.Cargando)
 
-    var incidenciaPulsada: Incidencia by mutableStateOf(Incidencia(tipo="", fecha_incidencia = "",
+    var incidenciaPulsada: Incidencia by mutableStateOf(Incidencia(idIncidencia = 0,tipo="", fecha_incidencia = null,
         fecha_introduccion = "", profesor = null, departamento = null, ubicacion = null, descripcion = "",
         observaciones = "", estado = null, responsable = null, fecha_resolucion = "", tiempo_invertido = "",
-        mas_info = ByteArray(0), comentarios = emptyList()))
+        mas_info = ByteArray(0), comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = null))
         private set
     fun actualizarIncidenciaPulsada(incidencia: Incidencia){
         incidenciaPulsada = incidencia
@@ -103,7 +103,7 @@ class IncidenciaViewModel(private val incidenciaRepositorio: IncidenciaRepositor
     companion object {
         val Factory : ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val aplicacion = (this[APPLICATION_KEY] as IncidenciasAplicacion)
+                val aplicacion = (this[APPLICATION_KEY] as ReparaTICAplicacion)
                 val incidenciaRepositorio = aplicacion.contenedor.incidenciaRepositorio
                 IncidenciaViewModel(incidenciaRepositorio = incidenciaRepositorio)
             }

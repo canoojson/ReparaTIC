@@ -5,12 +5,15 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Comentario(
-    @SerialName(value = "IdComentario")
-    val idComentario: Int? = null,
+    @SerialName(value = "idComentario")
+    val idComentario: Int = 0,
 
-    @SerialName(value = "Comentario")
-    val comentario: String,
+    @SerialName(value = "comentario")
+    val comentario: String?,
 
-    @SerialName(value = "incidencia")
-    val incidencia: Incidencia
+    @SerialName(value = "fecha_comentario")
+    val fecha: String?,
+
+    @SerialName(value = "profesor")
+    val profesor: Profesor?
 )

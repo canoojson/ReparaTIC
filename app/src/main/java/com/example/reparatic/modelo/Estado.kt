@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Estado(
-    @SerialName(value = "IdEstado")
-    val idEstado: Int? = null,
+    @SerialName(value = "idEstado")
+    val idEstado: Int,
 
-    @SerialName(value = "Descrip")
-    val descrip: String
+    @SerialName(value = "descrip")
+    var descrip: String
 )

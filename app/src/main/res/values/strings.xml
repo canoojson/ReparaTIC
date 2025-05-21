@@ -3,4 +3,7 @@
     <string name="incidencias">Incidencias</string>
     <string name="incidencia">Incidencia</string>
     <string name="atras">Atrás</string>
+    <string name="cargando">Cargando</string>
+    <string name="error">Error</string>
+    <string name="login">Inicio de sesión</string>
 </resources>

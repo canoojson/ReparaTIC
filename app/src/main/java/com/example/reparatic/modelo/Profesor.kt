@@ -5,24 +5,22 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Profesor(
-    @SerialName("IdProfesor")
-    val IdProfesor: Int? = null,
     @SerialName("dni")
     val dni: String,
-    @SerialName("Nombre")
-    val nombre: String,
-    @SerialName("Apellidos")
-    val apellidos: String,
-    @SerialName("descripcion")
-    val descripcion: String,
     @SerialName("departamento")
-    val departamento: Departamento,
+    val departamento: Departamento?,
     @SerialName("email")
     val email:String,
     @SerialName("pwd")
     val pwd: String,
     @SerialName("rol")
-    val rol: Rol,
+    val rol: Rol?,
     @SerialName("username")
-    val username: String
+    val username: String,
+    @SerialName("nombre")
+    val nombre: String,
+    @SerialName("apellidos")
+    val apellidos: String,
+    @SerialName("idProfesor")
+    val idProfesor: Int
 )

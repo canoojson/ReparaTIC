@@ -5,12 +5,12 @@ import kotlinx.serialization.SerialName
 
 @Serializable
 data class Ubicacion(
-    @SerialName(value = "IdUbicacion")
-    val idUbicacion: Int? = null,
+    @SerialName(value = "idUbicacion")
+    val idUbicacion: Int,
 
-    @SerialName(value = "Nombre")
-    val nombre: String,
+    @SerialName(value = "nombre")
+    var nombre: String,
 
-    @SerialName(value = "Descrip")
-    val descrip: String
+    @SerialName(value = "descrip")
+    var descrip: String
 )

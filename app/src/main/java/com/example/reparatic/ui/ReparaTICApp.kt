@@ -1,5 +1,6 @@
 package com.example.reparatic.ui
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -29,8 +30,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -43,13 +47,18 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.reparatic.R
 import com.example.reparatic.datos.DrawerMenu
+import com.example.reparatic.modelo.Profesor
+import com.example.reparatic.ui.pantallas.PantallaIncidencia
+import com.example.reparatic.ui.pantallas.PantallaInicioIncidencias
+import com.example.reparatic.ui.pantallas.PantallaLogin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 enum class Pantallas(@StringRes val titulo: Int) {
     //Incidencias
     Incidencias(titulo = R.string.incidencias),
-        Incidencia(titulo = R.string.incidencia)
+        Incidencia(titulo = R.string.incidencia),
+    Login(titulo = R.string.login)
 }
 
 val menu = arrayOf(
@@ -59,7 +68,13 @@ val menu = arrayOf(
 
 @Composable
 fun ReparaTICApp(
+    viewModelLogin: LoginViewModel = viewModel(factory = LoginViewModel.Factory),
     viewModelIncidecia: IncidenciaViewModel = viewModel(factory = IncidenciaViewModel.Factory),
+    viewModelProfesor: ProfesorViewModel = viewModel(factory = ProfesorViewModel.Factory),
+    viewModelDepartamento: DepartamentoViewModel = viewModel(factory = DepartamentoViewModel.Factory),
+    viewModelEstado: EstadoViewModel = viewModel(factory = EstadoViewModel.Factory),
+    viewModelUbicacion: UbicacionViewModel = viewModel(factory = UbicacionViewModel.Factory),
+    viewModelTiposHw: TiposHwViewModel = viewModel(factory = TiposHwViewModel.Factory),
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     drawerState: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
     navController: NavHostController = rememberNavController()
@@ -72,16 +87,20 @@ fun ReparaTICApp(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = pantallaActual != Pantallas.Login,
         drawerContent = {
             ModalDrawerSheet {
-                DrawerContent(
-                    menu = menu,
-                    pantallaActual = pantallaActual
-                ){ ruta ->
-                    coroutineScope.launch {
-                        drawerState.close()
+                if(pantallaActual != Pantallas.Login) {
+                    DrawerContent(
+                        menu = menu,
+                        pantallaActual = pantallaActual,
+                        login = viewModelLogin.login,
+                    ) { ruta ->
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        navController.navigate(ruta)
                     }
-                    navController.navigate(ruta)
                 }
             }
         },
@@ -95,14 +114,68 @@ fun ReparaTICApp(
             }
         ) {
             innerPadding ->
+
+            val uiStateIncidencia = viewModelIncidecia.incidenciaUIState
+            val uiStateLogin = viewModelLogin.estado
+            val uiStateProfesor = viewModelProfesor.profesorUIState
+            val uiStateDepartamento = viewModelDepartamento.departamentoUIState
+            val uiStateEstado = viewModelEstado.estadoUIState
+            val uiStateUbicacion by rememberUpdatedState(viewModelUbicacion.ubicacionUIState)
+            val uiStateTiposHw by rememberUpdatedState(viewModelTiposHw.tiposHwUIState)
+
             NavHost(
                 navController = navController,
-                startDestination = Pantallas.Incidencias.name,
+                startDestination = Pantallas.Login.name,
                 modifier = Modifier.padding(innerPadding)
             ) {
+                composable(Pantallas.Login.name) {
+                    PantallaLogin(
+                        uiState = viewModelLogin.estado,
+                        onLogin = { usuario, contrasena -> viewModelLogin.iniciarSesion(usuario, contrasena) },
+                        navController = navController
+                    )
+                }
+
+
                 composable(route = Pantallas.Incidencias.name) {
-                    PantallaIncidencias(
-                        modifier = Modifier.fillMaxSize()
+                    PantallaInicioIncidencias(
+                        appUIState = uiStateIncidencia,
+                        onIncidenciasObtenidas = {viewModelIncidecia.obtenerIncidencias()},
+                        onIncidenciaPulsada = {
+                            viewModelIncidecia.actualizarIncidenciaPulsada(it)
+                            navController.navigate(route = Pantallas.Incidencia.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.Incidencia.name){
+                    LaunchedEffect(Unit) {
+                        viewModelProfesor.obtenerProfesoresDepartamento("Informática")
+                    }
+                    PantallaIncidencia(
+                        incidencia = viewModelIncidecia.incidenciaPulsada,
+                        login = viewModelLogin.login,
+                        uiStatePro = uiStateProfesor,
+                        uiStateDep = uiStateDepartamento,
+                        uiStateEst = uiStateEstado,
+                        uiStateUbi = uiStateUbicacion,
+                        uiStateTiposHw= uiStateTiposHw,
+                        onActualizarPulsado = {
+                            Log.v("ReparaTICApp", it.responsable.toString())
+                            viewModelIncidecia.actualizarIncidencia(it.idIncidencia, it)
+                        },
+                        onEliminarPulsado = {
+                            viewModelIncidecia.eliminarIncidencia(it)
+                            navController.navigate(route = Pantallas.Incidencias.name)
+                        },
+                        onUbicacionActualizada = {
+                            viewModelUbicacion.actualizarUbicacion(it.idUbicacion, it)
+                            Log.v("ReparaTICApp", it.toString())
+                            navController.navigate(route = Pantallas.Incidencias.name)
+                        },
+                        onUbicacionEliminada = {
+                            viewModelUbicacion.eliminarUbicacion(it)
+                            navController.navigate(route = Pantallas.Incidencias.name)
+                        }
                     )
                 }
             }
@@ -115,6 +188,7 @@ fun ReparaTICApp(
 private fun DrawerContent(
     menu: Array<DrawerMenu>,
     pantallaActual: Pantallas,
+    login: Profesor,
     onMenuClick: (String) -> Unit
 ) {
     Column(
@@ -126,10 +200,16 @@ private fun DrawerContent(
                 .height(200.dp)
         ){
             Image(
-                modifier= Modifier.size(150.dp),
+                modifier= Modifier.size(150.dp)
+                    .align(Alignment.Center),
                 imageVector = Icons.Filled.AccountCircle,
                 contentScale = ContentScale.Crop,
                 contentDescription = null
+            )
+            Text(
+                text = login.nombre + " " + login.apellidos,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
         Spacer(modifier = Modifier.size(150.dp))
@@ -163,17 +243,19 @@ fun AppTopBar(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
         navigationIcon = {
-            if (drawerState != null) {
-                IconButton(
-                    onClick = {
-                        coroutineScope.launch {
-                            drawerState.open()
-                        }
-                    }) {
-                    Icon(
-                        imageVector = Icons.Filled.Menu,
-                        contentDescription = stringResource(id = R.string.atras)
-                    )
+            if(pantallaActual != Pantallas.Login) {
+                if (drawerState != null) {
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                drawerState.open()
+                            }
+                        }) {
+                        Icon(
+                            imageVector = Icons.Filled.Menu,
+                            contentDescription = stringResource(id = R.string.atras)
+                        )
+                    }
                 }
             }
         },
