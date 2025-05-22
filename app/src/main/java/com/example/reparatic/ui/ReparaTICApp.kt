@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +53,7 @@ import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.ui.pantallas.PantallaIncidencia
 import com.example.reparatic.ui.pantallas.PantallaInicioIncidencias
 import com.example.reparatic.ui.pantallas.PantallaLogin
+import com.example.reparatic.ui.pantallas.PantallaPerfil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -58,11 +61,13 @@ enum class Pantallas(@StringRes val titulo: Int) {
     //Incidencias
     Incidencias(titulo = R.string.incidencias),
         Incidencia(titulo = R.string.incidencia),
-    Login(titulo = R.string.login)
+    Login(titulo = R.string.login),
+    Perfil(titulo = R.string.perfil)
 }
 
 val menu = arrayOf(
-    DrawerMenu(Icons.Filled.Home,Pantallas.Incidencias.titulo, Pantallas.Incidencias.name)
+    DrawerMenu(Icons.Filled.Warning,Pantallas.Incidencias.titulo, Pantallas.Incidencias.name),
+    DrawerMenu(Icons.Filled.Person,Pantallas.Perfil.titulo, Pantallas.Perfil.name)
 )
 
 
@@ -131,12 +136,10 @@ fun ReparaTICApp(
                 composable(Pantallas.Login.name) {
                     PantallaLogin(
                         uiState = viewModelLogin.estado,
-                        onLogin = { usuario, contrasena -> viewModelLogin.iniciarSesion(usuario, contrasena) },
+                        onLogin = { usuario, contrasena -> viewModelLogin.iniciarSesion(usuario, contrasena)},
                         navController = navController
                     )
                 }
-
-
                 composable(route = Pantallas.Incidencias.name) {
                     PantallaInicioIncidencias(
                         appUIState = uiStateIncidencia,
@@ -178,6 +181,11 @@ fun ReparaTICApp(
                         }
                     )
                 }
+                composable(route = Pantallas.Perfil.name){
+                    PantallaPerfil(
+                        profesor = viewModelLogin.login
+                    )
+                }
             }
         }
     }
@@ -197,10 +205,10 @@ private fun DrawerContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(300.dp)
         ){
             Image(
-                modifier= Modifier.size(150.dp)
+                modifier= Modifier.size(250.dp)
                     .align(Alignment.Center),
                 imageVector = Icons.Filled.AccountCircle,
                 contentScale = ContentScale.Crop,
@@ -212,7 +220,7 @@ private fun DrawerContent(
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
-        Spacer(modifier = Modifier.size(150.dp))
+        Spacer(modifier = Modifier.size(100.dp))
         menu.forEach {
             NavigationDrawerItem(
                 label = {

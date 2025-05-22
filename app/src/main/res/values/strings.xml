@@ -6,4 +6,5 @@
     <string name="cargando">Cargando</string>
     <string name="error">Error</string>
     <string name="login">Inicio de sesión</string>
+    <string name="perfil">Perfil</string>
 </resources>

@@ -36,6 +36,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -178,7 +179,6 @@ fun PantallaIncidencia(
                                     incidenciaSoftware = incidenciaSoftware, fecha_introduccion = incidencia.fecha_introduccion)
                                 onActualizarPulsado(incidenciaAct)
                                 Toast.makeText(contexto, "Cambios guardados correctamente", Toast.LENGTH_SHORT).show()
-                                isEditable = false
                                 enModoEdicion = false
                             },
                             elevation = ButtonDefaults.buttonElevation(
@@ -220,19 +220,30 @@ fun PantallaIncidencia(
                         Text(text = "Eliminar")
                     }
                 }
-                TextField(
-                    value = descripcion,
-                    onValueChange = { descripcion = it },
-                    label = { Text("Descripción") },
-                    modifier = Modifier.width(500.dp)
-                        .padding(0.dp, 16.dp, 0.dp, 16.dp),
-                    readOnly = !isEditable
-                )
+                Row {
+                    TextField(
+                        value = incidencia.idIncidencia.toString(),
+                        onValueChange = {}, // necesario incluso si readOnly
+                        readOnly = true,
+                        label = { Text("ID") },
+                        modifier = Modifier.width(150.dp)
+                            .padding(0.dp, 16.dp, 16.dp, 16.dp)
+                    )
+                    TextField(
+                        value = descripcion,
+                        onValueChange = { descripcion = it },
+                        label = { Text("Descripción") },
+                        modifier = Modifier.width(500.dp)
+                            .padding(0.dp, 16.dp, 0.dp, 16.dp),
+                        readOnly = !enModoEdicion
+                    )
+                }
+
                 Row {
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = {
-                            if(isEditable){
+                            if(enModoEdicion){
                                 expanded = !expanded
                             }
                         }
@@ -257,7 +268,7 @@ fun PantallaIncidencia(
                                         responsable = profesor
                                         expanded = false
                                     },
-                                    enabled = isEditable
+                                    enabled = enModoEdicion
                                 )
                             }
                         }
@@ -265,7 +276,7 @@ fun PantallaIncidencia(
                     ExposedDropdownMenuBox(
                         expanded = expanded2,
                         onExpandedChange = {
-                            if(isEditable){
+                            if(enModoEdicion){
                                 expanded2 = !expanded2
                             }
                         },
@@ -291,7 +302,7 @@ fun PantallaIncidencia(
                                         departamento = departamentos
                                         expanded2 = false
                                     },
-                                    enabled = isEditable
+                                    enabled = enModoEdicion
                                 )
                             }
                         }
@@ -299,7 +310,7 @@ fun PantallaIncidencia(
                     ExposedDropdownMenuBox(
                         expanded = expanded3,
                         onExpandedChange = {
-                            if(isEditable){
+                            if(enModoEdicion){
                                 expanded3 = !expanded3
                             }
                         },
@@ -325,7 +336,7 @@ fun PantallaIncidencia(
                                         estado = estados
                                         expanded3 = false
                                     },
-                                    enabled = isEditable
+                                    enabled = enModoEdicion
                                 )
                             }
                         }
@@ -333,7 +344,7 @@ fun PantallaIncidencia(
                     ExposedDropdownMenuBox(
                         expanded = expanded5,
                         onExpandedChange = {
-                            if(isEditable){
+                            if(enModoEdicion){
                                 expanded5 = !expanded5
                             }
                         },
@@ -359,7 +370,7 @@ fun PantallaIncidencia(
                                         tipo = opcion
                                         expanded5 = false
                                     },
-                                    enabled = isEditable
+                                    enabled = enModoEdicion
                                 )
                             }
                         }
@@ -388,13 +399,13 @@ fun PantallaIncidencia(
                     label = { Text("Observaciones") },
                     modifier = Modifier.fillMaxWidth()
                         .height(100.dp),
-                    readOnly = !isEditable
+                    readOnly = !enModoEdicion
                 )
                 Row {
                     ExposedDropdownMenuBox(
                         expanded = expanded4,
                         onExpandedChange = {
-                            if(isEditable){
+                            if(enModoEdicion){
                                 expanded4 = !expanded4
                             }
                         }
@@ -419,12 +430,12 @@ fun PantallaIncidencia(
                                         ubicacion = ubicaciones
                                         expanded4 = false
                                     },
-                                    enabled = isEditable
+                                    enabled = enModoEdicion
                                 )
                             }
                         }
                     }
-                    if(isEditable){
+                    if(enModoEdicion){
                         Button(
                             onClick = {
                                 mostrarDialogoUbicacion = true
@@ -475,7 +486,7 @@ fun PantallaIncidencia(
                         ExposedDropdownMenuBox(
                             expanded = expanded6,
                             onExpandedChange = {
-                                if(isEditable){
+                                if(enModoEdicion){
                                     expanded6 = !expanded6
                                 }
                             },
@@ -501,7 +512,7 @@ fun PantallaIncidencia(
                                             incidenciaHardware!!.tipoHw = tiposHw
                                             expanded6 = false
                                         },
-                                        enabled = isEditable
+                                        enabled = enModoEdicion
                                     )
                                 }
                             }

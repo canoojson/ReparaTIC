@@ -45,7 +45,8 @@ fun PantallaLogin(
             },
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next
-            )
+            ),
+            modifier = Modifier.padding(0.dp,0.dp,0.dp,16.dp)
         )
         TextField(
             value = pwd,
