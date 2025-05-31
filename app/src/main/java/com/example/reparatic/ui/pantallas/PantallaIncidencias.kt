@@ -2,7 +2,6 @@ package com.example.reparatic.ui.pantallas
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,10 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.reparatic.modelo.Incidencia
-import com.example.reparatic.ui.IncidenciaUIState
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
+import com.example.reparatic.ui.ViewModels.IncidenciaUIState
 
 @Composable
 fun PantallaInicioIncidencias(
@@ -72,11 +68,16 @@ fun PantallaIncidencias(
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = incidencia.descripcion)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "#"+incidencia.idIncidencia.toString(),
-                        color = Color.Gray,
-                        fontSize = 14.sp)
+                    Column {
+                        Row {
+                            Text(text = incidencia.descripcion)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "#"+incidencia.idIncidencia.toString(),
+                                color = Color.Gray,
+                                fontSize = 14.sp)
+                        }
+                        Text(text= incidencia.fecha_incidencia.toString())
+                    }
                     Column(horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.Center,
                         modifier = modifier.fillMaxWidth()

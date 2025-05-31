@@ -3,8 +3,11 @@ package com.example.reparatic.conexion
 import com.example.reparatic.modelo.Departamento
 import com.example.reparatic.modelo.Estado
 import com.example.reparatic.modelo.Incidencia
+import com.example.reparatic.modelo.IncidenciaHardware
+import com.example.reparatic.modelo.IncidenciaSoftware
 import com.example.reparatic.modelo.LoginRequest
 import com.example.reparatic.modelo.Profesor
+import com.example.reparatic.modelo.Rol
 import com.example.reparatic.modelo.TiposHw
 import com.example.reparatic.modelo.Ubicacion
 import retrofit2.Response
@@ -107,6 +110,7 @@ interface Api {
     suspend fun eliminarEstado(
         @Path("id") id: Int
     ): Response<Estado>
+
     // UBICACIONES
     @GET("ubicaciones")
     suspend fun obtenerUbicaciones(): List<Ubicacion>
@@ -126,8 +130,8 @@ interface Api {
     suspend fun eliminarUbicacion(
         @Path("id") id: Int
     ): Response<Ubicacion>
-    //TIPO INCIDENCIAS
 
+    //TIPOS DE HARWDARE
     @GET("tiposhw")
     suspend fun obtenerTiposHW(): List<TiposHw>
 
@@ -146,4 +150,51 @@ interface Api {
     suspend fun eliminarTipoHW(
         @Path("id") id: Int
     ): Response<TiposHw>
+
+    // ROLES
+    @GET("roles")
+    suspend fun obtenerRoles(): List<Rol>
+
+    @POST("roles")
+    suspend fun insertarRol(
+        @Body rol: Rol
+    ): Rol
+
+    @PUT("roles/{id}")
+    suspend fun actualizarRol(
+        @Path("id") id: Int,
+        @Body rol: Rol
+    ): Response<Rol>
+
+    @DELETE("roles/{id}")
+    suspend fun eliminarRol(
+        @Path("id") id: Int
+    ): Response<Rol>
+
+    //Incidencia Hardware
+    @GET("incidenciahardware")
+    suspend fun obtenerIncidenciasHardware(): List<IncidenciaHardware>
+
+    @POST("incidenciahardware")
+    suspend fun insertarIncidenciaHardware(@Body incidencia: IncidenciaHardware): IncidenciaHardware
+
+    @PUT("incidenciahardware/{id}")
+    suspend fun actualizarIncidenciaHardware(@Path("id") id: Int, @Body incidencia: IncidenciaHardware): Response<IncidenciaHardware>
+
+    @DELETE("incidenciahardware/{id}")
+    suspend fun eliminarIncidenciaHardware(@Path("id") id: Int): Response<IncidenciaHardware>
+
+    //Incidencia Software
+    @GET("incidenciasoftware")
+    suspend fun obtenerIncidenciasSoftware(): List<IncidenciaSoftware>
+
+    @POST("incidenciasoftware")
+    suspend fun insertarIncidenciaSoftware(@Body incidencia: IncidenciaSoftware): IncidenciaSoftware
+
+    @PUT("incidenciasoftware/{id}")
+    suspend fun actualizarIncidenciaSoftware(@Path("id") id: Int, @Body incidencia: IncidenciaSoftware): Response<IncidenciaSoftware>
+
+    @DELETE("incidenciasoftware/{id}")
+    suspend fun eliminarIncidenciaSoftware(@Path("id") id: Int): Response<IncidenciaSoftware>
+
 }

@@ -1,4 +1,4 @@
-package com.example.reparatic.ui
+package com.example.reparatic.ui.ViewModels
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -21,7 +21,8 @@ import java.io.IOException
 sealed interface UbicacionUIState {
     data class ObtenerExito(val ubicaciones: List<Ubicacion>) : UbicacionUIState
     data class CrearExito(val ubicacion: Ubicacion) : UbicacionUIState
-    data class ActualizarExito(val ubicacion: Response<Ubicacion>) : UbicacionUIState
+    data class ActualizarExito(val ubicacion: Response<Ubicacion>, val ubicaciones: List<Ubicacion>) :
+        UbicacionUIState
     data class EliminarExito(val id: Int) : UbicacionUIState
 
     object Error : UbicacionUIState
@@ -32,6 +33,8 @@ class UbicacionViewModel(private val ubicacionRepositorio: UbicacionRepositorio)
     var ubicacionUIState: UbicacionUIState by mutableStateOf(UbicacionUIState.Cargando)
 
     var ubicacionPulsada: Ubicacion by mutableStateOf(Ubicacion(idUbicacion = 0, nombre = "", descrip = ""))
+
+    var listaUbicaciones: List<Ubicacion> by mutableStateOf(emptyList<Ubicacion>())
 
     fun actualizarUbicacionPulsada(ubicacion: Ubicacion) {
         ubicacionPulsada = ubicacion
@@ -45,7 +48,7 @@ class UbicacionViewModel(private val ubicacionRepositorio: UbicacionRepositorio)
         viewModelScope.launch {
             ubicacionUIState = UbicacionUIState.Cargando
             ubicacionUIState = try {
-                val listaUbicaciones = ubicacionRepositorio.obtenerUbicaciones()
+                listaUbicaciones = ubicacionRepositorio.obtenerUbicaciones()
                 UbicacionUIState.ObtenerExito(listaUbicaciones)
             } catch (e: IOException) {
                 UbicacionUIState.Error
@@ -74,14 +77,13 @@ class UbicacionViewModel(private val ubicacionRepositorio: UbicacionRepositorio)
             ubicacionUIState = UbicacionUIState.Cargando
             ubicacionUIState = try {
                 val ubicacionActualizada = ubicacionRepositorio.actualizarUbicacion(id, ubicacion)
-                Log.v("ViewModel", ubicacion.toString())
-                UbicacionUIState.ActualizarExito(ubicacionActualizada)
+                obtenerUbicaciones()
+                UbicacionUIState.ActualizarExito(ubicacionActualizada, listaUbicaciones)
             } catch (e: IOException) {
                 UbicacionUIState.Error
             } catch (e: HttpException) {
                 UbicacionUIState.Error
             }
-
         }
     }
 

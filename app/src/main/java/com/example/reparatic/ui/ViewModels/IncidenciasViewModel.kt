@@ -1,5 +1,6 @@
-package com.example.reparatic.ui
+package com.example.reparatic.ui.ViewModels
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -30,9 +31,11 @@ sealed interface IncidenciaUIState {
 class IncidenciaViewModel(private val incidenciaRepositorio: IncidenciaRepositorio): ViewModel() {
     var incidenciaUIState: IncidenciaUIState by mutableStateOf(IncidenciaUIState.Cargando)
 
-    var incidenciaPulsada: Incidencia by mutableStateOf(Incidencia(idIncidencia = 0,tipo="", fecha_incidencia = null,
+    var incidenciaPulsada: Incidencia by mutableStateOf(Incidencia(
+        idIncidencia = 0,
+        tipo ="", fecha_incidencia = null,
         fecha_introduccion = "", profesor = null, departamento = null, ubicacion = null, descripcion = "",
-        observaciones = "", estado = null, responsable = null, fecha_resolucion = "", tiempo_invertido = "",
+        observaciones = "", estado = null, responsable = null, fecha_resolucion = "", tiempo_invertido = "00:00:00",
         mas_info = ByteArray(0), comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = null))
         private set
     fun actualizarIncidenciaPulsada(incidencia: Incidencia){
@@ -72,9 +75,12 @@ class IncidenciaViewModel(private val incidenciaRepositorio: IncidenciaRepositor
     }
 
     fun actualizarIncidencia(id: Int, incidencia: Incidencia) {
+        Log.v("Cguuigfeihsjgfi", incidencia.incidenciaHardware?.modelo.toString() + incidencia.incidenciaSoftware?.ids.toString())
         viewModelScope.launch {
+            Log.v("Cguuigfeihsjgfi", "actualizarIncidencia")
             incidenciaUIState = IncidenciaUIState.Cargando
             incidenciaUIState = try {
+                Log.v("Cguuigfeihsjgfi", "actualizarIncidencia2")
                 val incidenciaActualizada =
                     incidenciaRepositorio.actualizarIncidencia(id, incidencia)
                 IncidenciaUIState.ActualizarExito(incidenciaActualizada)

@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class IncidenciaSoftware(
+    @SerialName(value = "ids")
+    val ids: Int,
+
     @SerialName("so")
     var SO: String,
 

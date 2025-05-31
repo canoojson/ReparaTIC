@@ -16,6 +16,9 @@ interface ContenedorApp{
     val estadoRepositorio: EstadoRepositorio
     val ubicacionRepositorio: UbicacionRepositorio
     val tiposHwRepositorio: TiposHwRepositorio
+    val rolRepositorio: RolRepositorio
+    val incidenciaHardwareRepositorio: IncidenciaHardwareRepositorio
+    val incidenciaSoftwareRepositorio: IncidenciaSoftwareRepositorio
 }
 
 class IncidenciaContenedorApp(private val context: Context): ContenedorApp{
@@ -58,6 +61,18 @@ class IncidenciaContenedorApp(private val context: Context): ContenedorApp{
         retrofit.create(Api::class.java)
     }
 
+    private val servicioRetrofitRoles: Api by lazy {
+        retrofit.create(Api::class.java)
+    }
+
+    private val servicioRetrofitIncidenciaHardware: Api by lazy {
+        retrofit.create(Api::class.java)
+    }
+
+    private val servicioRetrofitIncidenciaSoftware: Api by lazy {
+        retrofit.create(Api::class.java)
+    }
+
     override val loginRepositorio: LoginRepositorio by lazy {
         ConexionLoginRepositorio(servicioretrofitLogin)
     }
@@ -82,6 +97,17 @@ class IncidenciaContenedorApp(private val context: Context): ContenedorApp{
     }
     override val tiposHwRepositorio: TiposHwRepositorio by lazy {
         ConexionTiposHwRepositorio(servicioretrofitTiposHW)
+    }
+
+    override val rolRepositorio: RolRepositorio by lazy {
+        conexionRolRepositorio(servicioRetrofitRoles)
+    }
+
+    override val incidenciaHardwareRepositorio: IncidenciaHardwareRepositorio by lazy {
+        ConexionIncidenciaHardwareRepositorio(servicioRetrofitIncidenciaHardware)
+    }
+    override val incidenciaSoftwareRepositorio: IncidenciaSoftwareRepositorio by lazy {
+        ConexionIncidenciaSoftwareRepositorio(servicioRetrofitIncidenciaSoftware)
     }
 
 }

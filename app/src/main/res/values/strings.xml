@@ -7,4 +7,6 @@
     <string name="error">Error</string>
     <string name="login">Inicio de sesión</string>
     <string name="perfil">Perfil</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
+    <string name="incidencia_nueva">Nueva incidencia</string>
 </resources>

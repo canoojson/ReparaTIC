@@ -35,10 +35,10 @@ data class Incidencia(
     val tiempo_invertido: String?,
     @Serializable(with = ByteArrayBase64Serializer::class)
     val mas_info: ByteArray?,
-    @SerialName("comentarios")
-    val comentarios: List<Comentario>?,
     @SerialName("incidenciaHardware")
     val incidenciaHardware: IncidenciaHardware?,
     @SerialName("incidenciaSoftware")
-    val incidenciaSoftware: IncidenciaSoftware?
+    val incidenciaSoftware: IncidenciaSoftware?,
+    @SerialName("comentarios")
+    val comentarios: List<Comentario>?
 )

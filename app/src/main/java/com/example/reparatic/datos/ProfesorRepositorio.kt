@@ -1,9 +1,7 @@
 package com.example.reparatic.datos
 
 import com.example.reparatic.conexion.Api
-import com.example.reparatic.modelo.Incidencia
 import com.example.reparatic.modelo.Profesor
-import com.example.reparatic.ui.IncidenciaUIState
 import retrofit2.Response
 
 interface ProfesorRepositorio {

@@ -1,4 +1,4 @@
-package com.example.reparatic.ui
+package com.example.reparatic.ui.ViewModels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

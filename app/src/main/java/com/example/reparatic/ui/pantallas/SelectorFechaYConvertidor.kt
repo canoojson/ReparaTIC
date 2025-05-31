@@ -2,6 +2,7 @@ package com.example.reparatic.ui.pantallas
 
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -56,10 +57,46 @@ fun DatePickerWithFormattedString(
         )
     }
 }
+@Composable
+fun TimePickerWithFormattedString(
+    onDurationSelected: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+
+    val timePickerDialog = TimePickerDialog(
+        context,
+        { _, selectedHour, selectedMinute ->
+            // Aquí formateamos a HH:mm:ss para guardar duración
+            val duration = String.format("%02d:%02d:00", selectedHour, selectedMinute)
+            onDurationSelected(duration)
+        },
+        hour,
+        minute,
+        true // 24 horas, porque para duración es más claro
+    )
+
+    Button(
+        onClick = { timePickerDialog.show() },
+        colors = ButtonDefaults.buttonColors(
+            Color.Transparent, Color.Transparent, Color.Transparent, Color.Transparent
+        ),
+        modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)
+    ) {
+        Image(
+            painter = painterResource(R.drawable.reloj), // Cambia por tu icono
+            contentDescription = "Seleccionar tiempo invertido",
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
 fun formatearFecha(fechaOriginal: String?): String {
     return try {
         val formatoEntrada = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()) // ajusta según tu formato real
-        val formatoSalida = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
+        val formatoSalida = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         val fecha = formatoEntrada.parse(fechaOriginal ?: "")
         fecha?.let { formatoSalida.format(it) } ?: "Fecha inválida"
     } catch (e: Exception) {

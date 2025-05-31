@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class IncidenciaHardware(
+    @SerialName(value = "idh")
+    val idh: Int,
+
     @SerialName("modelo")
     var modelo: String,
 
@@ -12,5 +15,5 @@ data class IncidenciaHardware(
     var numSerie: String,
 
     @SerialName("tipoHw")
-    var tipoHw: TiposHw
+    var tipoHw: TiposHw?
 )

@@ -1,30 +1,20 @@
 package com.example.reparatic.ui.pantallas
 
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.Environment
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.content.MediaType.Companion.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -36,8 +26,8 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,28 +35,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.core.content.FileProvider
 import com.example.reparatic.R
 import com.example.reparatic.modelo.Comentario
 import com.example.reparatic.modelo.Departamento
 import com.example.reparatic.modelo.Estado
 import com.example.reparatic.modelo.Incidencia
+import com.example.reparatic.modelo.IncidenciaHardware
+import com.example.reparatic.modelo.IncidenciaSoftware
 import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.modelo.TiposHw
 import com.example.reparatic.modelo.Ubicacion
-import com.example.reparatic.ui.DepartamentoUIState
-import com.example.reparatic.ui.EstadoUIState
-import com.example.reparatic.ui.LoginUIState
-import com.example.reparatic.ui.ProfesorUIState
-import com.example.reparatic.ui.TiposHwUIState
-import com.example.reparatic.ui.UbicacionUIState
+import com.example.reparatic.ui.ViewModels.DepartamentoUIState
+import com.example.reparatic.ui.ViewModels.EstadoUIState
+import com.example.reparatic.ui.ViewModels.ProfesorUIState
+import com.example.reparatic.ui.ViewModels.TiposHwUIState
+import com.example.reparatic.ui.ViewModels.UbicacionUIState
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,11 +67,14 @@ fun PantallaIncidencia(
     uiStateDep: DepartamentoUIState,
     uiStateEst : EstadoUIState,
     uiStateUbi : UbicacionUIState,
-    uiStateTiposHw :  TiposHwUIState,
+    uiStateTiposHw : TiposHwUIState,
+    onInsertarPulsado: (Incidencia) -> Unit,
     onActualizarPulsado: (Incidencia) -> Unit,
     onEliminarPulsado: (id: Int) -> Unit,
     onUbicacionEliminada: (id: Int) -> Unit,
     onUbicacionActualizada: (Ubicacion) -> Unit,
+    onIncidenciaSoftwareEliminada : (IncidenciaSoftware) -> Unit,
+    onIncidenciaHardwareEliminada : (IncidenciaHardware) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Variables modificables de incidencia
@@ -97,10 +89,15 @@ fun PantallaIncidencia(
     var fechaIncidencia by remember { mutableStateOf(incidencia.fecha_incidencia) }
     var responsable by remember { mutableStateOf(incidencia.responsable) }
     var departamento by remember { mutableStateOf(incidencia.departamento) }
-    var login by remember { mutableStateOf(login) }
     var estado by remember { mutableStateOf(incidencia.estado) }
     var incidenciaHardware by remember { mutableStateOf(incidencia.incidenciaHardware) }
     var incidenciaSoftware by remember { mutableStateOf(incidencia.incidenciaSoftware) }
+    var modelo by remember { mutableStateOf(incidenciaHardware?.modelo?: "") }
+    var numserie by remember { mutableStateOf(incidenciaHardware?.numSerie?: "") }
+    var tipoHw by remember { mutableStateOf(incidenciaHardware?.tipoHw) }
+    var software by remember { mutableStateOf(incidenciaSoftware?.software?: "") }
+    var clave by remember { mutableStateOf(incidenciaSoftware?.clave?: "") }
+    var so by remember { mutableStateOf(incidenciaSoftware?.SO?: "") }
     var fechaResolucion by remember { mutableStateOf(incidencia.fecha_resolucion) }
 
     // Remember de listas desplegables
@@ -119,7 +116,7 @@ fun PantallaIncidencia(
     var listaProfesores = emptyList<Profesor>()
     var listaDepartamentos = emptyList<Departamento>()
     var listaEstados = emptyList<Estado>()
-    var listaUbicaciones = emptyList<Ubicacion>()
+    var listaUbicaciones by remember { mutableStateOf(emptyList<Ubicacion>()) }
     var listaTiposHw = emptyList<TiposHw>()
     var opcionesTipo = listOf("HW","SW")
 
@@ -139,10 +136,18 @@ fun PantallaIncidencia(
             listaEstados = uiStateEst.estados
         else -> PantallaError(modifier = modifier.fillMaxWidth())
     }
-    when(uiStateUbi){
-        is UbicacionUIState.ObtenerExito ->
-            listaUbicaciones = uiStateUbi.ubicaciones
-        else -> PantallaError(modifier = modifier.fillMaxWidth())
+    LaunchedEffect(uiStateUbi) {
+        when(uiStateUbi){
+            is UbicacionUIState.ObtenerExito ->
+                listaUbicaciones = uiStateUbi.ubicaciones
+            is UbicacionUIState.ActualizarExito ->
+                ubicacion = uiStateUbi.ubicacion.body()
+            is UbicacionUIState.Error -> {}
+
+            else -> {
+
+            }
+        }
     }
     when(uiStateTiposHw){
         is TiposHwUIState.ObtenerExito ->
@@ -169,16 +174,71 @@ fun PantallaIncidencia(
             ) {
                 Row( ) {
                     //Aqui mostramos el boton de Guardar si estamos en el modo de edicion
+
                     if(enModoEdicion){
                         Button(
                             onClick = {
-                                val incidenciaAct = Incidencia(idIncidencia = incidencia.idIncidencia, tipo = tipo, fecha_incidencia = fechaIncidencia,
-                                    profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion, descripcion = descripcion,
-                                    observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
-                                    tiempo_invertido = tiempoInvertido, mas_info = mas_info, comentarios = comentarios, incidenciaHardware = incidenciaHardware,
-                                    incidenciaSoftware = incidenciaSoftware, fecha_introduccion = incidencia.fecha_introduccion)
-                                onActualizarPulsado(incidenciaAct)
-                                Toast.makeText(contexto, "Cambios guardados correctamente", Toast.LENGTH_SHORT).show()
+                                if(incidencia.idIncidencia==0){
+                                    var incidenciaNueva : Incidencia
+
+                                    if(tipo == "HW"){
+                                        incidenciaHardware = IncidenciaHardware(idh = 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
+
+                                         incidenciaNueva = Incidencia(
+                                             idIncidencia = 0,
+                                             tipo =tipo,
+                                             fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
+                                        if(incidenciaSoftware != null){
+                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                        }
+                                    }else{
+                                        incidenciaSoftware = IncidenciaSoftware(ids = 0, software = software, clave = clave, SO = so)
+                                         incidenciaNueva = Incidencia(
+                                             idIncidencia = 0,
+                                             tipo =tipo,
+                                             fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
+                                        if(incidenciaHardware != null){
+                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                        }
+                                    }
+                                    onInsertarPulsado(incidenciaNueva)
+                                }else{
+                                    var incidenciaActu : Incidencia
+                                    if(tipo == "HW"){
+                                        incidenciaHardware = IncidenciaHardware(idh = incidencia.incidenciaHardware?.idh?: 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
+                                        incidenciaActu = Incidencia(
+                                            idIncidencia = incidencia.idIncidencia,
+                                            tipo =tipo,
+                                            fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
+                                        if(incidenciaSoftware != null){
+                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                        }
+                                    }else{
+                                        incidenciaSoftware = IncidenciaSoftware(ids = incidencia.incidenciaSoftware?.ids?: 0, software = software, clave = clave, SO = so)
+                                        incidenciaActu = Incidencia(
+                                            idIncidencia = incidencia.idIncidencia,
+                                            tipo =tipo,
+                                            fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
+                                        if(incidenciaHardware != null){
+                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                        }
+                                    }
+                                    onActualizarPulsado(incidenciaActu)
+                                }
+
+                                isEditable = false
                                 enModoEdicion = false
                             },
                             elevation = ButtonDefaults.buttonElevation(
@@ -187,7 +247,12 @@ fun PantallaIncidencia(
                                 disabledElevation = 0.dp
                             )
                         ) {
-                            Text(text = "Guardar")
+                            Image(
+                                modifier= Modifier.size(20.dp),
+                                painter = painterResource(R.drawable.guardar_el_archivo),
+                                contentScale = ContentScale.Crop,
+                                contentDescription = "Guardar"
+                            )
                         }
                     //Si no lo estamos, mostramos el de editar
 
@@ -203,27 +268,39 @@ fun PantallaIncidencia(
                                 disabledElevation = 0.dp
                             )
                         ) {
-                            Text(text = "Editar")
+                            Image(
+                                modifier= Modifier.size(20.dp),
+                                imageVector = Icons.Default.Edit,
+                                contentScale = ContentScale.Crop,
+                                contentDescription = "Editar"
+                            )
                         }
                     }
-                    Button(onClick = {
-                        onEliminarPulsado(incidencia.idIncidencia)
-                    },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        ),
-                        colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                    ) {
-                        Text(text = "Eliminar")
+                    if(incidencia.idIncidencia!=0){
+                        Button(onClick = {
+                            onEliminarPulsado(incidencia.idIncidencia)
+                        },
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 10.dp,
+                                pressedElevation = 15.dp,
+                                disabledElevation = 0.dp
+                            ),
+                            colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
+                            modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
+                        ) {
+                            Image(
+                                modifier= Modifier.size(20.dp),
+                                imageVector = Icons.Filled.Delete,
+                                contentScale = ContentScale.Crop,
+                                contentDescription = "Eliminar"
+                            )
+                        }
                     }
                 }
                 Row {
                     TextField(
-                        value = incidencia.idIncidencia.toString(),
-                        onValueChange = {}, // necesario incluso si readOnly
+                        value = if(incidencia.idIncidencia==0) "Auto" else incidencia.idIncidencia.toString(),
+                        onValueChange = {},
                         readOnly = true,
                         label = { Text("ID") },
                         modifier = Modifier.width(150.dp)
@@ -237,6 +314,7 @@ fun PantallaIncidencia(
                             .padding(0.dp, 16.dp, 0.dp, 16.dp),
                         readOnly = !enModoEdicion
                     )
+
                 }
 
                 Row {
@@ -249,7 +327,7 @@ fun PantallaIncidencia(
                         }
                     ) {
                         TextField(
-                            value = responsable!!.nombre + " " + responsable!!.apellidos,
+                            value = (responsable?.nombre?: "") + " " + (responsable?.apellidos?:""),
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Responsable") },
@@ -283,7 +361,7 @@ fun PantallaIncidencia(
                         modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
                     ) {
                         TextField(
-                            value = departamento!!.nombreDpto,
+                            value = departamento?.nombreDpto?: "",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Departamento") },
@@ -317,8 +395,8 @@ fun PantallaIncidencia(
                         modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
                     ) {
                         TextField(
-                            value = estado!!.descrip,
-                            onValueChange = {estado!!.descrip = it},
+                            value = estado?.descrip?: "Pendiente",
+                            onValueChange = {},
                             readOnly = true,
                             label = { Text("Estado") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded3) },
@@ -352,7 +430,7 @@ fun PantallaIncidencia(
                     ) {
                         TextField(
                             value = tipo,
-                            onValueChange = { tipo = it},
+                            onValueChange = {},
                             readOnly = true,
                             label = { Text("Tipo de Incidencia") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded5) },
@@ -376,18 +454,15 @@ fun PantallaIncidencia(
                         }
                     }
                 }
-                if(estado!!.descrip=="Resuelta"){
+                if((estado?.descrip?: "Pendiente")=="Resuelta"){
                     Row {
                         TextField(
-                            value = fechaResolucion!!,
+                            value = formatearFecha(getFechaActual()),
                             onValueChange = { fechaResolucion = it },
                             readOnly = true,
                             label = { Text("Fecha de resolución") },
                             modifier = Modifier.width(150.dp)
                         )
-                        DatePickerWithFormattedString { date ->
-                            fechaResolucion = date
-                        }
                     }
                 }
                 if(observaciones==null){
@@ -411,7 +486,7 @@ fun PantallaIncidencia(
                         }
                     ) {
                         TextField(
-                            value = ubicacion!!.nombre,
+                            value = ubicacion?.nombre ?:"",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Ubicacion") },
@@ -464,24 +539,36 @@ fun PantallaIncidencia(
                             )
                         }
                     }
+                    TextField(
+                        value = tiempoInvertido?:"00:00",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Tiempo invertido") },
+                        modifier = Modifier.padding(0.dp,0.dp,16.dp,0.dp)
+                    )
+                    TimePickerWithFormattedString{ hora ->
+                        tiempoInvertido = hora
+                    }
                 }
                 Row{
                     if(tipo == "HW"){
                         TextField(
-                            value = if(incidenciaHardware!=null) incidenciaHardware!!.modelo else "",
-                            onValueChange = {incidenciaHardware!!.modelo = it},
+                            value = modelo,
+                            onValueChange = {modelo = it},
                             readOnly = !enModoEdicion,
                             label = { Text("Modelo") },
                             modifier = Modifier.width(200.dp)
-                                .padding(0.dp, 16.dp, 0.dp, 16.dp)
+                                .padding(0.dp, 16.dp, 0.dp, 16.dp),
+                            singleLine = true
                         )
                         TextField(
-                            value = if(incidenciaHardware!=null) incidenciaHardware!!.numSerie else "",
-                            onValueChange = {incidenciaHardware!!.numSerie = it},
+                            value = numserie,
+                            onValueChange = {numserie = it},
                             readOnly = !enModoEdicion,
                             label = { Text("Número de serie") },
                             modifier = Modifier
-                                .padding(16.dp, 16.dp,0.dp,0.dp)
+                                .padding(16.dp, 16.dp,0.dp,0.dp),
+                            singleLine = true
                         )
                         ExposedDropdownMenuBox(
                             expanded = expanded6,
@@ -493,8 +580,8 @@ fun PantallaIncidencia(
                             modifier = Modifier.padding(16.dp,16.dp,0.dp,0.dp)
                         ) {
                             TextField(
-                                value = if(incidenciaHardware!=null) incidenciaHardware!!.tipoHw.descrip else "",
-                                onValueChange = {incidenciaHardware!!.tipoHw.descrip = it},
+                                value = tipoHw?.descrip ?: "",
+                                onValueChange = {  },
                                 readOnly = true,
                                 label = { Text("Tipo Hardware") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded6) },
@@ -509,7 +596,7 @@ fun PantallaIncidencia(
                                     DropdownMenuItem(
                                         text = { Text(text = tiposHw.descrip) },
                                         onClick = {
-                                            incidenciaHardware!!.tipoHw = tiposHw
+                                            tipoHw = tiposHw
                                             expanded6 = false
                                         },
                                         enabled = enModoEdicion
@@ -519,28 +606,31 @@ fun PantallaIncidencia(
                         }
                     }else{
                         TextField(
-                            value = if(incidenciaSoftware!=null)incidenciaSoftware!!.software else "",
-                            onValueChange = {incidenciaSoftware!!.software = it},
+                            value = software,
+                            onValueChange = {software = it},
                             readOnly = !enModoEdicion,
                             label = { Text("Software") },
                             modifier = Modifier.width(200.dp)
-                                .padding(0.dp, 16.dp, 0.dp, 16.dp)
+                                .padding(0.dp, 16.dp, 0.dp, 16.dp),
+                            singleLine = true
                         )
                         TextField(
-                            value = if(incidenciaSoftware!=null) incidenciaSoftware!!.software else "",
-                            onValueChange = {incidenciaSoftware!!.software = it},
+                            value = clave,
+                            onValueChange = {clave = it},
                             readOnly = !enModoEdicion,
                             label = { Text("Clave") },
                             modifier = Modifier
-                                .padding(16.dp, 16.dp,0.dp,0.dp)
+                                .padding(16.dp, 16.dp,0.dp,0.dp),
+                            singleLine = true
                         )
                         TextField(
-                            value = if(incidenciaSoftware!=null)incidenciaSoftware!!.SO else "",
-                            onValueChange = {incidenciaSoftware!!.SO = it},
+                            value = so,
+                            onValueChange = {so = it},
                             readOnly = !enModoEdicion,
                             label = { Text("S.O") },
                             modifier = Modifier
-                                .padding(16.dp, 16.dp,0.dp,0.dp)
+                                .padding(16.dp, 16.dp,0.dp,0.dp),
+                            singleLine = true
                         )
                     }
                 }
@@ -635,169 +725,36 @@ fun PantallaIncidencia(
                                 fecha = getFechaActual()
                             )
                             nuevoComentario = ""
-                            val incidenciaAct = Incidencia(idIncidencia = incidencia.idIncidencia, tipo = tipo, fecha_incidencia = fechaIncidencia,
-                                profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion, descripcion = descripcion,
-                                observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
-                                tiempo_invertido = tiempoInvertido, mas_info = mas_info, comentarios = comentarios, incidenciaHardware = incidenciaHardware,
-                                incidenciaSoftware = incidenciaSoftware, fecha_introduccion = incidencia.fecha_introduccion)
-                            onActualizarPulsado(incidenciaAct)
+                            if(incidencia.idIncidencia!=0){
+                                val incidenciaAct = Incidencia(
+                                    idIncidencia = incidencia.idIncidencia, tipo = tipo, fecha_incidencia = fechaIncidencia,
+                                    profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion, descripcion = descripcion,
+                                    observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
+                                    tiempo_invertido = tiempoInvertido, mas_info = mas_info, comentarios = comentarios,
+                                    fecha_introduccion = incidencia.fecha_introduccion, incidenciaHardware = incidenciaHardware, incidenciaSoftware = incidenciaSoftware)
+                                onActualizarPulsado(incidenciaAct)
+                            }else{
+
+                            }
                         }
                     }
                 ) {
-                    Text("Enviar")
+                    Image(
+                        modifier= Modifier.size(20.dp),
+                        imageVector = Icons.Filled.Send,
+                        contentScale = ContentScale.Crop,
+                        contentDescription = null
+                    )
                 }
             }
         }
     }
 
     if(mostrarDialogoUbicacion){
-        DialogoUbicacion(onDismiss = {mostrarDialogoUbicacion = false}, ubicacion = ubicacion!!,
+       DialogoUbicacion(onDismiss = {mostrarDialogoUbicacion = false}, ubicacion = ubicacion!!,
             onUbicacionActualizada = onUbicacionActualizada, onUbicacionEliminada = onUbicacionEliminada)
     }
     if(mostrarDialogoUbicacionDetalles){
         DialogoUbicacionDetalles(onDismiss = {mostrarDialogoUbicacionDetalles = false}, ubicacion = ubicacion!!)
-    }
-}
-
-
-@Composable
-fun DialogoUbicacion(onDismiss: () -> Unit, ubicacion: Ubicacion,
-                     onUbicacionActualizada: (Ubicacion) -> Unit,
-                     onUbicacionEliminada:(id: Int) -> Unit){
-    var nombre by remember { mutableStateOf(ubicacion.nombre) }
-    var detalles by remember { mutableStateOf(ubicacion.descrip) }
-    val contexto = LocalContext.current
-    val ubicacionActualizada = Ubicacion(idUbicacion = ubicacion.idUbicacion, nombre = nombre, descrip = detalles)
-    Dialog(
-        onDismissRequest = onDismiss
-    ){
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color.White,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ){
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Row( ) {
-                    Button(
-                        onClick = {
-                            Log.v("Dialog", ubicacionActualizada.toString())
-                            onUbicacionActualizada(ubicacionActualizada)
-                            Toast.makeText(contexto, "Cambios guardados correctamente", Toast.LENGTH_SHORT).show()
-                        },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        )
-                    ) {
-                        Text(text = "Guardar")
-                    }
-                    Button(onClick = {
-                        Log.v("Ubicacion Eliminada", ubicacion.idUbicacion.toString())
-                        onUbicacionEliminada(ubicacion.idUbicacion)
-                    },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        ),
-                        colors = ButtonDefaults.buttonColors(Color.Red, Color.Black, Color.Red, Color.Black),
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                    ) {
-                        Text(text = "Eliminar")
-                    }
-                }
-                Row {
-                    TextField(
-                        value = ubicacion.idUbicacion.toString(),
-                        onValueChange = { },
-                        label = { Text("Id") },
-                        readOnly = true,
-                        modifier = Modifier.padding(0.dp, 16.dp, 16.dp, 16.dp)
-
-                    )
-                    TextField(
-                        value = nombre,
-                        onValueChange = { nombre = it },
-                        label = { Text("Nombre") },
-                        modifier = Modifier.padding(0.dp, 16.dp, 16.dp, 16.dp)
-                    )
-                }
-                TextField(
-                    value = detalles,
-                    onValueChange = { detalles = it },
-                    label = { Text("Más detalles") },
-                    modifier = Modifier.height(100.dp)
-                        .width(400.dp)
-                )
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center){
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier.padding(16.dp),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        )
-                    ) {
-                        Text(text = "Cancelar")
-                    }
-                }
-            }
-        }
-    }
-}
-@Composable
-fun DialogoUbicacionDetalles(onDismiss: () -> Unit, ubicacion: Ubicacion){
-    Dialog(
-        onDismissRequest = onDismiss
-    ){
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color.White,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ){
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                TextField(
-                    value = ubicacion.nombre,
-                    onValueChange = { },
-                    label = { Text("Nombre") },
-                    modifier = Modifier.padding(0.dp, 16.dp, 16.dp, 16.dp),
-                    readOnly = true
-                )
-                TextField(
-                    value = ubicacion.descrip,
-                    onValueChange = { },
-                    label = { Text("Más detalles") },
-                    readOnly = true,
-                    modifier = Modifier.height(100.dp)
-                        .width(400.dp)
-                )
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center){
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier.padding(16.dp),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        )
-                    ) {
-                        Text(text = "Cerrar")
-                    }
-                }
-
-            }
-        }
     }
 }

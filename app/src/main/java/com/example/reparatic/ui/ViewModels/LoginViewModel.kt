@@ -1,6 +1,5 @@
-package com.example.reparatic.ui
+package com.example.reparatic.ui.ViewModels
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,11 +11,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.reparatic.ReparaTICAplicacion
 import com.example.reparatic.datos.LoginRepositorio
-import com.example.reparatic.modelo.Incidencia
 import com.example.reparatic.modelo.Profesor
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import retrofit2.Response
 
 sealed interface LoginUIState {
     data class ObtenerExito(val profesor: Profesor) : LoginUIState
@@ -48,6 +45,10 @@ class LoginViewModel(
             }
 
         }
+    }
+
+    fun cerrarSesion(){
+        estado = LoginUIState.Cargando
     }
     companion object {
         val Factory : ViewModelProvider.Factory = viewModelFactory {
