@@ -1,6 +1,7 @@
 package com.example.reparatic.ui.pantallas
 
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.padding
@@ -48,7 +49,7 @@ fun DatePickerWithFormattedString(
         colors = ButtonDefaults.buttonColors(
             Color.Transparent, Color.Transparent, Color.Transparent,
             Color.Transparent),
-        modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
+        modifier = Modifier.padding(0.dp,32.dp,0.dp,0.dp)
     ) {
         Image(
             painter = painterResource(R.drawable.calendario),
@@ -57,6 +58,7 @@ fun DatePickerWithFormattedString(
         )
     }
 }
+@SuppressLint("DefaultLocale")
 @Composable
 fun TimePickerWithFormattedString(
     onDurationSelected: (String) -> Unit
@@ -76,7 +78,7 @@ fun TimePickerWithFormattedString(
         },
         hour,
         minute,
-        true // 24 horas, porque para duración es más claro
+        true
     )
 
     Button(
@@ -87,7 +89,7 @@ fun TimePickerWithFormattedString(
         modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)
     ) {
         Image(
-            painter = painterResource(R.drawable.reloj), // Cambia por tu icono
+            painter = painterResource(R.drawable.reloj),
             contentDescription = "Seleccionar tiempo invertido",
             modifier = Modifier.size(20.dp)
         )
@@ -95,7 +97,7 @@ fun TimePickerWithFormattedString(
 }
 fun formatearFecha(fechaOriginal: String?): String {
     return try {
-        val formatoEntrada = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()) // ajusta según tu formato real
+        val formatoEntrada = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         val formatoSalida = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         val fecha = formatoEntrada.parse(fechaOriginal ?: "")
         fecha?.let { formatoSalida.format(it) } ?: "Fecha inválida"

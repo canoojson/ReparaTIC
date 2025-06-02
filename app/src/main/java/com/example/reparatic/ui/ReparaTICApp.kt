@@ -16,9 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -55,6 +59,7 @@ import com.example.reparatic.R
 import com.example.reparatic.datos.DrawerMenu
 import com.example.reparatic.modelo.Incidencia
 import com.example.reparatic.modelo.Profesor
+import com.example.reparatic.modelo.Ubicacion
 import com.example.reparatic.ui.ViewModels.DepartamentoViewModel
 import com.example.reparatic.ui.ViewModels.EstadoViewModel
 import com.example.reparatic.ui.ViewModels.IncidenciaHardwareViewModel
@@ -67,8 +72,10 @@ import com.example.reparatic.ui.ViewModels.TiposHwViewModel
 import com.example.reparatic.ui.ViewModels.UbicacionViewModel
 import com.example.reparatic.ui.pantallas.PantallaIncidencia
 import com.example.reparatic.ui.pantallas.PantallaInicioIncidencias
+import com.example.reparatic.ui.pantallas.PantallaInicioUbicaciones
 import com.example.reparatic.ui.pantallas.PantallaLogin
 import com.example.reparatic.ui.pantallas.PantallaPerfil
+import com.example.reparatic.ui.pantallas.PantallaUbicacion
 import com.example.reparatic.ui.pantallas.getFechaActual
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -79,12 +86,22 @@ enum class Pantallas(@StringRes val titulo: Int) {
         Incidencia(titulo = R.string.incidencia),
         IncidenciaNueva(titulo = R.string.incidencia_nueva),
     Login(titulo = R.string.login),
-    Perfil(titulo = R.string.perfil)
+    Perfil(titulo = R.string.perfil),
+    Ubicaciones(titulo = R.string.ubicaciones),
+        Ubicacion(titulo = R.string.ubicacion),
+        NuevaUbicacion(titulo = R.string.nueva_ubicacion),
+    Departamentos(titulo = R.string.departamentos),
+    Profesores(titulo = R.string.profesores),
+    GestionPermisos(titulo = R.string.gestion_permisos)
 }
 
 val menu = arrayOf(
     DrawerMenu(Icons.Filled.Warning,Pantallas.Incidencias.titulo, Pantallas.Incidencias.name),
-    DrawerMenu(Icons.Filled.Person,Pantallas.Perfil.titulo, Pantallas.Perfil.name)
+    DrawerMenu(Icons.Filled.Person,Pantallas.Perfil.titulo, Pantallas.Perfil.name),
+    DrawerMenu(Icons.Filled.Place,Pantallas.Ubicaciones.titulo, Pantallas.Ubicaciones.name),
+    DrawerMenu(Icons.Filled.Create,Pantallas.Departamentos.titulo, Pantallas.Departamentos.name),
+    DrawerMenu(Icons.Filled.Face,Pantallas.Profesores.titulo, Pantallas.Profesores.name),
+    DrawerMenu(Icons.Filled.Lock,Pantallas.GestionPermisos.titulo, Pantallas.GestionPermisos.name)
 )
 
 
@@ -153,6 +170,28 @@ fun ReparaTICApp(
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
+
+                if(pantallaActual == Pantallas.Ubicaciones){
+                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevaUbicacion.name) }) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
+                    }
+                }
+                /*
+                if(pantallaActual == Pantallas.Profesores){
+                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.ProfesorNuevo.name) }) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
+                    }
+                }
+                if(pantallaActual == Pantallas.Departamentos){
+                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.DepartamentoNuevo.name) }) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
+                    }
+                }
+                if(pantallaActual == Pantallas.GestionPermisos){
+                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.RolNuevo.name) }) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
+                    }
+                }*/
             }
         ) {
             innerPadding ->
@@ -165,8 +204,6 @@ fun ReparaTICApp(
             val uiStateUbicacion by rememberUpdatedState(viewModelUbicacion.ubicacionUIState)
             val uiStateTiposHw by rememberUpdatedState(viewModelTiposHw.tiposHwUIState)
             val uiStateRol by rememberUpdatedState(viewModelRol.rolUIState)
-            val uiStateIncidenciaHardware = viewModelIncidenciaHardware.estadoUI
-            val uiStateIncidenciaSoftware = viewModelIncidenciaSoftware.estadoUI
 
             NavHost(
                 navController = navController,
@@ -213,6 +250,7 @@ fun ReparaTICApp(
                         uiStateTiposHw= uiStateTiposHw,
                         onInsertarPulsado = {
                             viewModelIncidecia.insertarIncidencia(it)
+                            navController.navigate(route = Pantallas.Incidencias.name)
                         },
                         onActualizarPulsado = {
                             viewModelIncidecia.actualizarIncidencia(it.idIncidencia, it)
@@ -258,6 +296,7 @@ fun ReparaTICApp(
                         uiStateTiposHw= uiStateTiposHw,
                         onInsertarPulsado = {
                             viewModelIncidecia.insertarIncidencia(it)
+                            navController.navigate(route = Pantallas.Incidencias.name)
                         },
                         onActualizarPulsado = {
                             Log.v("Cguuigfeihsjgfi", "onActualizarPulsado")
@@ -298,6 +337,48 @@ fun ReparaTICApp(
 
                     )
                 }
+                composable(route = Pantallas.Ubicaciones.name) {
+                    PantallaInicioUbicaciones(
+                        appUIState = uiStateUbicacion,
+                        onUbicacionesObtenidas = {viewModelUbicacion.obtenerUbicaciones()},
+                        onUbicacionPulsada = {
+                            viewModelUbicacion.actualizarUbicacionPulsada(it)
+                            navController.navigate(route = Pantallas.Ubicacion.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.Ubicacion.name) {
+                    PantallaUbicacion(
+                        ubicacion = viewModelUbicacion.ubicacionPulsada,
+                        onUbicacionInsertada = {
+                            viewModelUbicacion.insertarUbicacion(it)
+                            navController.navigate(route = Pantallas.Ubicaciones.name)
+                        },
+                        onUbicacionActualizada = {
+                            viewModelUbicacion.actualizarUbicacion(it.idUbicacion, it)
+                        },
+                        onUbicacionEliminada = {
+                            viewModelUbicacion.eliminarUbicacion(it)
+                            navController.navigate(route = Pantallas.Ubicaciones.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.NuevaUbicacion.name) {
+                    PantallaUbicacion(
+                        ubicacion = Ubicacion(idUbicacion = 0, nombre = "", descrip = ""),
+                        onUbicacionInsertada = {
+                            viewModelUbicacion.insertarUbicacion(it)
+                            navController.navigate(route = Pantallas.Ubicaciones.name)
+                        },
+                        onUbicacionActualizada = {
+                            viewModelUbicacion.actualizarUbicacion(it.idUbicacion, it)
+                        },
+                        onUbicacionEliminada = {
+                            viewModelUbicacion.eliminarUbicacion(it)
+                            navController.navigate(route = Pantallas.Ubicaciones.name)
+                        }
+                    )
+                }
             }
         }
     }
@@ -318,14 +399,14 @@ private fun DrawerContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(200.dp)
         ){
             Image(
-                modifier= Modifier.size(250.dp)
+                modifier= Modifier.size(150.dp)
                     .align(Alignment.Center),
                 imageVector = Icons.Filled.AccountCircle,
                 contentScale = ContentScale.Crop,
-                contentDescription = null
+                contentDescription = "Foto de perfil"
             )
             Text(
                 text = login.nombre + " " + login.apellidos,
@@ -333,7 +414,7 @@ private fun DrawerContent(
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
-        Spacer(modifier = Modifier.size(100.dp))
+        Spacer(modifier = Modifier.size(50.dp))
         menu.forEach {
             NavigationDrawerItem(
                 label = {

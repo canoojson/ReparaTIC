@@ -1,6 +1,7 @@
 package com.example.reparatic.ui.pantallas
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,6 +80,7 @@ fun PantallaIncidencia(
     modifier: Modifier = Modifier
 ) {
     // Variables modificables de incidencia
+    var idIncidencia by remember { mutableIntStateOf(incidencia.idIncidencia) }
     var tipo by remember { mutableStateOf(incidencia.tipo) }
     var ubicacion by remember { mutableStateOf(incidencia.ubicacion) }
     var descripcion by remember { mutableStateOf(incidencia.descripcion) }
@@ -109,8 +112,17 @@ fun PantallaIncidencia(
     var expanded6 by remember { mutableStateOf(false) }
 
     //Estado de TextField y listas desplegables
-    var isEditable by remember { mutableStateOf(false) }
-    var enModoEdicion by remember { mutableStateOf(false) }
+    var isEditable by remember {
+        if(idIncidencia==0){
+            mutableStateOf(true)
+        }else{
+            mutableStateOf(false)
+        }}
+    var enModoEdicion by remember { if(idIncidencia==0){
+        mutableStateOf(true)
+    }else{
+        mutableStateOf(false)
+    } }
 
     //Listas
     var listaProfesores = emptyList<Profesor>()
@@ -174,40 +186,46 @@ fun PantallaIncidencia(
             ) {
                 Row( ) {
                     //Aqui mostramos el boton de Guardar si estamos en el modo de edicion
-
                     if(enModoEdicion){
                         Button(
                             onClick = {
-                                if(incidencia.idIncidencia==0){
-                                    var incidenciaNueva : Incidencia
+                                if(estado == null){
+                                    estado = listaEstados[1]
+                                }
 
+                                if(idIncidencia==0){
+                                    var incidenciaNueva : Incidencia
+                                    incidenciaHardware = IncidenciaHardware(idh = 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
+                                    incidenciaSoftware = IncidenciaSoftware(ids = 0, software = software, clave = clave, SO = so)
                                     if(tipo == "HW"){
-                                        incidenciaHardware = IncidenciaHardware(idh = 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
 
                                          incidenciaNueva = Incidencia(
                                              idIncidencia = 0,
                                              tipo =tipo,
                                              fecha_incidencia = fechaIncidencia,
                                             fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
+                                             tiempo_invertido = tiempoInvertido,
                                             mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
                                         if(incidenciaSoftware != null){
                                             onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
                                         }
                                     }else{
-                                        incidenciaSoftware = IncidenciaSoftware(ids = 0, software = software, clave = clave, SO = so)
+                                        Log.v("Incidencia", incidenciaSoftware?.toString()?: "Patata")
                                          incidenciaNueva = Incidencia(
                                              idIncidencia = 0,
                                              tipo =tipo,
                                              fecha_incidencia = fechaIncidencia,
                                             fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
+                                             tiempo_invertido = tiempoInvertido,
                                             mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
                                         if(incidenciaHardware != null){
                                             onIncidenciaHardwareEliminada(incidenciaHardware!!)
                                         }
                                     }
                                     onInsertarPulsado(incidenciaNueva)
+                                    Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
                                 }else{
                                     var incidenciaActu : Incidencia
                                     if(tipo == "HW"){
@@ -216,8 +234,9 @@ fun PantallaIncidencia(
                                             idIncidencia = incidencia.idIncidencia,
                                             tipo =tipo,
                                             fecha_incidencia = fechaIncidencia,
-                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable,
+                                            fecha_resolucion = fechaResolucion, tiempo_invertido = tiempoInvertido,
                                             mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
                                         if(incidenciaSoftware != null){
                                             onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
@@ -228,14 +247,16 @@ fun PantallaIncidencia(
                                             idIncidencia = incidencia.idIncidencia,
                                             tipo =tipo,
                                             fecha_incidencia = fechaIncidencia,
-                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = null, tiempo_invertido = "00:00:00",
+                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
+                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
+                                            tiempo_invertido = tiempoInvertido,
                                             mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
                                         if(incidenciaHardware != null){
                                             onIncidenciaHardwareEliminada(incidenciaHardware!!)
                                         }
                                     }
                                     onActualizarPulsado(incidenciaActu)
+                                    Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
                                 }
 
                                 isEditable = false
@@ -311,9 +332,21 @@ fun PantallaIncidencia(
                         onValueChange = { descripcion = it },
                         label = { Text("Descripción") },
                         modifier = Modifier.width(500.dp)
-                            .padding(0.dp, 16.dp, 0.dp, 16.dp),
+                            .padding(0.dp, 16.dp, 16.dp, 16.dp),
                         readOnly = !enModoEdicion
                     )
+                    TextField(
+                        value = fechaIncidencia?:"dd-MM-yyyy",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Fecha incidencia") },
+                        modifier = Modifier.width(200.dp).padding(0.dp, 16.dp, 0.dp, 16.dp)
+                    )
+                    if(enModoEdicion){
+                        DatePickerWithFormattedString{ fecha ->
+                            fechaIncidencia = fecha
+                        }
+                    }
 
                 }
 
@@ -510,28 +543,24 @@ fun PantallaIncidencia(
                             }
                         }
                     }
-                    if(enModoEdicion){
-                        Button(
-                            onClick = {
+                    Button(
+                        onClick = {
+                            if(enModoEdicion) {
                                 mostrarDialogoUbicacion = true
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
+                            }else{
+                                mostrarDialogoUbicacionDetalles = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
+                        modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
+                    ) {
+                        if(enModoEdicion){
                             Image(
                                 painter = painterResource(R.drawable.enlace_roto_),
                                 contentDescription = "Editar ubicación",
                                 modifier = Modifier.size(30.dp)
                             )
-                        }
-                    }else{
-                        Button(
-                            onClick = {
-                                mostrarDialogoUbicacionDetalles = true
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
+                        }else {
                             Image(
                                 painter = painterResource(R.drawable.enlace_roto),
                                 contentDescription = "Editar ubicación",
@@ -539,15 +568,19 @@ fun PantallaIncidencia(
                             )
                         }
                     }
-                    TextField(
-                        value = tiempoInvertido?:"00:00",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Tiempo invertido") },
-                        modifier = Modifier.padding(0.dp,0.dp,16.dp,0.dp)
-                    )
-                    TimePickerWithFormattedString{ hora ->
-                        tiempoInvertido = hora
+                    if(estado?.descrip=="Resuelta") {
+                        TextField(
+                            value = tiempoInvertido ?: "00:00:00",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Tiempo invertido") },
+                            modifier = Modifier.width(150.dp)
+                        )
+                        if (enModoEdicion) {
+                            TimePickerWithFormattedString { hora ->
+                                tiempoInvertido = hora
+                            }
+                        }
                     }
                 }
                 Row{
@@ -604,7 +637,7 @@ fun PantallaIncidencia(
                                 }
                             }
                         }
-                    }else{
+                    }else if(tipo == "SW"){
                         TextField(
                             value = software,
                             onValueChange = {software = it},
@@ -616,7 +649,7 @@ fun PantallaIncidencia(
                         )
                         TextField(
                             value = clave,
-                            onValueChange = {clave = it},
+                            onValueChange = { clave = it },
                             readOnly = !enModoEdicion,
                             label = { Text("Clave") },
                             modifier = Modifier
@@ -700,51 +733,169 @@ fun PantallaIncidencia(
                 }
             }
 
-            // HACER TRAS LA PANTALLA DE INICIO DE SESION
+            Log.v("Incidencia", idIncidencia.toString())
+            if(idIncidencia!=0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = nuevoComentario,
+                        onValueChange = { nuevoComentario = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        placeholder = { Text("Escribe un comentario...") },
+                        singleLine = true
+                    )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextField(
-                    value = nuevoComentario,
-                    onValueChange = { nuevoComentario = it },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    placeholder = { Text("Escribe un comentario...") },
-                    singleLine = true
-                )
+                    Button(
+                        onClick = {
+                            if (nuevoComentario.isNotBlank()) {
+                                Log.v("ReparaTICApp", login.toString())
+                                comentarios = comentarios + Comentario(
+                                    profesor = login,
+                                    comentario = nuevoComentario,
+                                    fecha = getFechaActual()
+                                )
+                                nuevoComentario = ""
+                                if (idIncidencia == 0) {
+                                    var incidenciaNueva: Incidencia
 
-                Button(
-                    onClick = {
-                        if (nuevoComentario.isNotBlank()) {
-                            Log.v("ReparaTICApp", login.toString())
-                            comentarios = comentarios + Comentario(
-                                profesor = login,
-                                comentario = nuevoComentario,
-                                fecha = getFechaActual()
-                            )
-                            nuevoComentario = ""
-                            if(incidencia.idIncidencia!=0){
-                                val incidenciaAct = Incidencia(
-                                    idIncidencia = incidencia.idIncidencia, tipo = tipo, fecha_incidencia = fechaIncidencia,
-                                    profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion, descripcion = descripcion,
-                                    observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
-                                    tiempo_invertido = tiempoInvertido, mas_info = mas_info, comentarios = comentarios,
-                                    fecha_introduccion = incidencia.fecha_introduccion, incidenciaHardware = incidenciaHardware, incidenciaSoftware = incidenciaSoftware)
-                                onActualizarPulsado(incidenciaAct)
-                            }else{
+                                    if (tipo == "HW") {
+                                        incidenciaHardware = IncidenciaHardware(
+                                            idh = 0,
+                                            modelo = modelo,
+                                            numSerie = numserie,
+                                            tipoHw = tipoHw
+                                        )
+                                        incidenciaSoftware = IncidenciaSoftware(
+                                            ids = 0,
+                                            software = software,
+                                            clave = clave,
+                                            SO = so
+                                        )
 
+                                        incidenciaNueva = Incidencia(
+                                            idIncidencia = 0,
+                                            tipo = tipo,
+                                            fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()),
+                                            profesor = login,
+                                            departamento = departamento,
+                                            ubicacion = ubicacion,
+                                            descripcion = descripcion,
+                                            observaciones = observaciones,
+                                            estado = estado,
+                                            responsable = responsable,
+                                            fecha_resolucion = fechaResolucion,
+                                            tiempo_invertido = tiempoInvertido,
+                                            mas_info = null,
+                                            comentarios = emptyList(),
+                                            incidenciaHardware = incidenciaHardware,
+                                            incidenciaSoftware = null
+                                        )
+                                        if (incidenciaSoftware != null) {
+                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                        }
+                                    } else {
+
+                                        incidenciaNueva = Incidencia(
+                                            idIncidencia = 0,
+                                            tipo = tipo,
+                                            fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()),
+                                            profesor = login,
+                                            departamento = departamento,
+                                            ubicacion = ubicacion,
+                                            descripcion = descripcion,
+                                            observaciones = observaciones,
+                                            estado = estado,
+                                            responsable = responsable,
+                                            fecha_resolucion = fechaResolucion,
+                                            tiempo_invertido = tiempoInvertido,
+                                            mas_info = null,
+                                            comentarios = emptyList(),
+                                            incidenciaHardware = null,
+                                            incidenciaSoftware = incidenciaSoftware
+                                        )
+                                        if (incidenciaHardware != null) {
+                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                        }
+                                    }
+                                    onInsertarPulsado(incidenciaNueva)
+                                } else {
+                                    var incidenciaActu: Incidencia
+                                    if (tipo == "HW") {
+                                        incidenciaHardware = IncidenciaHardware(
+                                            idh = incidencia.incidenciaHardware?.idh ?: 0,
+                                            modelo = modelo,
+                                            numSerie = numserie,
+                                            tipoHw = tipoHw
+                                        )
+                                        incidenciaActu = Incidencia(
+                                            idIncidencia = incidencia.idIncidencia,
+                                            tipo = tipo,
+                                            fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()),
+                                            profesor = incidencia.profesor,
+                                            departamento = departamento,
+                                            ubicacion = ubicacion,
+                                            descripcion = descripcion,
+                                            observaciones = observaciones,
+                                            estado = estado,
+                                            responsable = responsable,
+                                            fecha_resolucion = fechaResolucion,
+                                            tiempo_invertido = tiempoInvertido,
+                                            mas_info = null,
+                                            comentarios = comentarios,
+                                            incidenciaHardware = incidenciaHardware,
+                                            incidenciaSoftware = null
+                                        )
+                                        if (incidenciaSoftware != null) {
+                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                        }
+                                    } else {
+                                        incidenciaSoftware = IncidenciaSoftware(
+                                            ids = incidencia.incidenciaSoftware?.ids ?: 0,
+                                            software = software,
+                                            clave = clave,
+                                            SO = so
+                                        )
+                                        incidenciaActu = Incidencia(
+                                            idIncidencia = incidencia.idIncidencia,
+                                            tipo = tipo,
+                                            fecha_incidencia = fechaIncidencia,
+                                            fecha_introduccion = formatearFecha(getFechaActual()),
+                                            profesor = incidencia.profesor,
+                                            departamento = departamento,
+                                            ubicacion = ubicacion,
+                                            descripcion = descripcion,
+                                            observaciones = observaciones,
+                                            estado = estado,
+                                            responsable = responsable,
+                                            fecha_resolucion = fechaResolucion,
+                                            tiempo_invertido = tiempoInvertido,
+                                            mas_info = null,
+                                            comentarios = comentarios,
+                                            incidenciaHardware = null,
+                                            incidenciaSoftware = incidenciaSoftware
+                                        )
+                                        if (incidenciaHardware != null) {
+                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                        }
+                                    }
+                                    onActualizarPulsado(incidenciaActu)
+                                }
                             }
                         }
+                    ) {
+                        Image(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = Icons.Filled.Send,
+                            contentScale = ContentScale.Crop,
+                            contentDescription = null
+                        )
                     }
-                ) {
-                    Image(
-                        modifier= Modifier.size(20.dp),
-                        imageVector = Icons.Filled.Send,
-                        contentScale = ContentScale.Crop,
-                        contentDescription = null
-                    )
                 }
             }
         }

@@ -76,6 +76,7 @@ fun PantallaIncidencias(
                                 color = Color.Gray,
                                 fontSize = 14.sp)
                         }
+                        Text(text = incidencia.profesor!!.nombre + " " + incidencia.profesor.apellidos)
                         Text(text= incidencia.fecha_incidencia.toString())
                     }
                     Column(horizontalAlignment = Alignment.End,
@@ -83,7 +84,7 @@ fun PantallaIncidencias(
                         modifier = modifier.fillMaxWidth()
                     )
                     {
-                        Text(text = incidencia.responsable!!.nombre + " " + incidencia.responsable.apellidos)
+                        Text(text = (incidencia.responsable?.nombre?: "Sin") + " " + (incidencia.responsable?.apellidos?:"Asignar"))
                         Text(text = incidencia.estado!!.descrip)
                         Text(text = incidencia.ubicacion!!.nombre)
                     }

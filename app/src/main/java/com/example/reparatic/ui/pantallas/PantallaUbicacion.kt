@@ -11,8 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -27,41 +32,73 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.example.reparatic.R
 import com.example.reparatic.modelo.Ubicacion
 
 @Composable
-fun DialogoUbicacion(
-    onDismiss: () -> Unit,
+fun PantallaUbicacion(
     ubicacion: Ubicacion,
+    onUbicacionInsertada : (Ubicacion) -> Unit,
     onUbicacionActualizada: (Ubicacion) -> Unit,
-    onUbicacionEliminada:(id: Int) -> Unit){
+    onUbicacionEliminada:(id: Int) -> Unit
+){
 
+    var idUbicacion by remember { mutableStateOf(ubicacion.idUbicacion) }
     var nombre by remember { mutableStateOf(ubicacion.nombre) }
     var detalles by remember { mutableStateOf(ubicacion.descrip) }
     val contexto = LocalContext.current
     var ubicacionActualizada by remember { mutableStateOf(Ubicacion(idUbicacion = ubicacion.idUbicacion, nombre = nombre, descrip = detalles)) }
-    Dialog(
-        onDismissRequest = onDismiss
+    var isEditable by remember {
+        if(idUbicacion==0){
+            mutableStateOf(true)
+        }else{
+            mutableStateOf(false)
+        }}
+    var enModoEdicion by remember { if(idUbicacion==0){
+        mutableStateOf(true)
+    }else{
+        mutableStateOf(false)
+    } }
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
     ){
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color.White,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ){
+        Row(horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Row( ) {
                     Button(
                         onClick = {
-                            ubicacionActualizada = Ubicacion(idUbicacion= ubicacion.idUbicacion, nombre = nombre, descrip = detalles)
-                            onUbicacionActualizada(ubicacionActualizada)
-                            Toast.makeText(contexto, "Cambios guardados correctamente", Toast.LENGTH_SHORT).show()
-                            onDismiss()
+                            if(enModoEdicion){
+                                if(ubicacion.idUbicacion == 0){
+                                    onUbicacionInsertada(Ubicacion(idUbicacion=0, nombre = nombre, descrip = detalles))
+                                    Toast.makeText(
+                                        contexto,
+                                        "Ubicación insertada correctamente",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }else {
+                                    ubicacionActualizada = Ubicacion(
+                                        idUbicacion = ubicacion.idUbicacion,
+                                        nombre = nombre,
+                                        descrip = detalles
+                                    )
+                                    onUbicacionActualizada(ubicacionActualizada)
+                                    Toast.makeText(
+                                        contexto,
+                                        "Cambios guardados correctamente",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }else{
+                                isEditable = true
+                                enModoEdicion = true
+                            }
                         },
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 10.dp,
@@ -69,12 +106,22 @@ fun DialogoUbicacion(
                             disabledElevation = 0.dp
                         )
                     ) {
-                        Image(
-                            modifier= Modifier.size(20.dp),
-                            painter = painterResource(R.drawable.guardar_el_archivo),
-                            contentScale = ContentScale.Crop,
-                            contentDescription = "Guardar"
-                        )
+                        if(enModoEdicion){
+                            Image(
+                                modifier= Modifier.size(20.dp),
+                                painter = painterResource(R.drawable.guardar_el_archivo),
+                                contentScale = ContentScale.Crop,
+                                contentDescription = "Guardar"
+                            )
+                        }else{
+                            Image(
+                                modifier= Modifier.size(20.dp),
+                                imageVector = Icons.Filled.Create,
+                                contentScale = ContentScale.Crop,
+                                contentDescription = "Editar"
+                            )
+                        }
+
                     }
 
                     Button(onClick = {
@@ -92,7 +139,6 @@ fun DialogoUbicacion(
                     ) {
                         Text(text = "Eliminar")
                     }
-
                 }
                 Row {
                     TextField(
@@ -109,69 +155,6 @@ fun DialogoUbicacion(
                     modifier = Modifier.height(100.dp)
                         .width(400.dp)
                 )
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center){
-                    Button(
-                        onClick = { onDismiss() },
-                        modifier = Modifier.padding(16.dp),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        )
-                    ) {
-                        Text(text = "Cancelar")
-                    }
-                }
-            }
-        }
-    }
-}
-@Composable
-fun DialogoUbicacionDetalles(onDismiss: () -> Unit, ubicacion: Ubicacion){
-    Dialog(
-        onDismissRequest = onDismiss
-    ){
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color.White,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ){
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                TextField(
-                    value = ubicacion.nombre,
-                    onValueChange = { },
-                    label = { Text("Nombre") },
-                    modifier = Modifier.padding(0.dp, 16.dp, 16.dp, 16.dp),
-                    readOnly = true
-                )
-                TextField(
-                    value = ubicacion.descrip,
-                    onValueChange = { },
-                    label = { Text("Más detalles") },
-                    readOnly = true,
-                    modifier = Modifier.height(100.dp)
-                        .width(400.dp)
-                )
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center){
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier.padding(16.dp),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        )
-                    ) {
-                        Text(text = "Cerrar")
-                    }
-                }
-
             }
         }
     }

@@ -9,4 +9,10 @@
     <string name="perfil">Perfil</string>
     <string name="cerrar_sesion">Cerrar sesión</string>
     <string name="incidencia_nueva">Nueva incidencia</string>
+    <string name="ubicaciones">Ubicaciones</string>
+    <string name="departamentos">Departamentos</string>
+    <string name="profesores">Profesores</string>
+    <string name="gestion_permisos">Gestión de permisos</string>
+    <string name="ubicacion">Ubicación</string>
+    <string name="nueva_ubicacion">Nueva ubicación</string>
 </resources>
