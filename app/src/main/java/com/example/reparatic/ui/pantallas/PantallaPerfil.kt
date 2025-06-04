@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -56,16 +57,24 @@ import com.example.reparatic.ui.encriptarMD5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaPerfil(
+fun PantallaProfesor(
     profesor: Profesor,
     uiStateDepto: DepartamentoUIState,
     uiStateRol: RolUIState,
     uiStateProfesor : ProfesorUIState,
+    onInsertarPulsado : (Profesor) -> Unit,
     onActualizarPulsado : (Profesor) -> Unit,
     onEliminarPulsado : (Profesor) -> Unit
 ) {
     //Variables
-    var modoEdicion by remember { mutableStateOf(false) }
+    var modoEdicion by remember {
+        if (profesor.idProfesor==0){
+            mutableStateOf(true)
+        }else{
+            mutableStateOf(false)
+        }
+
+    }
     var mostrarDialogContraseña by remember { mutableStateOf(false) }
     val contexto = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
@@ -73,14 +82,15 @@ fun PantallaPerfil(
 
         //Variables Perfil
     var perfil by remember { mutableStateOf(profesor) }
-    var nombre by remember { mutableStateOf(perfil.nombre) }
-    var apellidos by remember { mutableStateOf(perfil.apellidos) }
-    var email by remember { mutableStateOf(perfil.email) }
-    var pwd by remember { mutableStateOf(perfil.pwd) }
-    var departamento by remember { mutableStateOf(perfil.departamento) }
-    var rol by remember { mutableStateOf(perfil.rol) }
-    var username by remember { mutableStateOf(perfil.username) }
-    var dni by remember { mutableStateOf(perfil.dni) }
+    var idProfesor by remember { mutableStateOf(profesor.idProfesor) }
+    var nombre by remember { mutableStateOf(profesor.nombre) }
+    var apellidos by remember { mutableStateOf(profesor.apellidos) }
+    var email by remember { mutableStateOf(profesor.email) }
+    var pwd by remember { mutableStateOf(profesor.pwd) }
+    var departamento by remember { mutableStateOf(profesor.departamento) }
+    var rol by remember { mutableStateOf(profesor.rol) }
+    var username by remember { mutableStateOf(profesor.username) }
+    var dni by remember { mutableStateOf(profesor.dni) }
 
     var listaDepartamentos = emptyList<Departamento>()
     var listaRoles = emptyList<Rol>()
@@ -147,11 +157,11 @@ fun PantallaPerfil(
                         contentDescription = "Foto de perfil"
                     )
                     Text(
-                        perfil.nombre,
+                        nombre,
                         fontSize = 50.sp
                     )
                     Text(
-                        perfil.apellidos,
+                        apellidos,
                         fontSize = 50.sp
                     )
 
@@ -159,10 +169,19 @@ fun PantallaPerfil(
             }
             Column {
                 Row {
-                    if (modoEdicion) {
                         Button(
                             onClick = {
-                                modoEdicion = false
+                                if(idProfesor==0){
+                                    val profesorNuevo = Profesor(idProfesor = 0, pwd = pwd, dni = dni, username = username, email = email,
+                                        rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
+                                    onInsertarPulsado(profesorNuevo)
+
+                                }else{
+                                    val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = pwd, dni = dni, username = username, email = email,
+                                        rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
+                                    onActualizarPulsado(profesorActu)
+                                }
+                                modoEdicion = !modoEdicion
                             },
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 10.dp,
@@ -171,38 +190,25 @@ fun PantallaPerfil(
                             ),
                             modifier = Modifier.padding(32.dp, 32.dp, 0.dp, 0.dp)
                         ) {
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                painter = painterResource(R.drawable.guardar_el_archivo),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null
-                            )
+                            if(modoEdicion){
+                                Image(
+                                    modifier= Modifier.size(20.dp),
+                                    painter = painterResource(R.drawable.guardar_el_archivo),
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = "Guardar"
+                                )
+                            }else{
+                                Image(
+                                    modifier= Modifier.size(20.dp),
+                                    imageVector = Icons.Filled.Edit,
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = "Editar")
+                            }
                         }
                         //Si no lo estamos, mostramos el de editar
-
-                    } else {
-                        Button(
-                            onClick = {
-                                modoEdicion = true
-                            },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            ),
-                            modifier = Modifier.padding(32.dp, 32.dp, 0.dp, 0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                imageVector = Icons.Filled.Edit,
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null
-                            )
-                        }
-                    }
                     Button(
                         onClick = {
-
+                                onEliminarPulsado(perfil)
                         },
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 10.dp,
@@ -219,18 +225,24 @@ fun PantallaPerfil(
                             contentDescription = "Eliminar"
                         )
                     }
-                    Button(
-                        onClick = {
-                            mostrarDialogContraseña = true
-                        },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        ),
-                        modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
-                    ) {
-                        Text(text = "Cambiar contraseña")
+                    if(profesor.idProfesor!=0){
+                        Button(
+                            onClick = {
+                                mostrarDialogContraseña = !mostrarDialogContraseña
+                            },
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 10.dp,
+                                pressedElevation = 15.dp,
+                                disabledElevation = 0.dp
+                            ),
+                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                        ) {
+                            if(pwd == ""){
+                                Text(text = "Establecer contraseña")
+                            }else{
+                                Text(text = "Cambiar contraseña")
+                            }
+                        }
                     }
                 }
                 Row {
@@ -278,7 +290,7 @@ fun PantallaPerfil(
                         modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)
                     ) {
                         TextField(
-                            value = departamento!!.nombreDpto,
+                            value = departamento?.nombreDpto?:"",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Departamento") },
@@ -312,7 +324,7 @@ fun PantallaPerfil(
                         modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)
                     ) {
                         TextField(
-                            value = rol!!.descrip,
+                            value = rol?.descrip?:"",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Rol") },
@@ -351,7 +363,10 @@ fun PantallaPerfil(
         }
     }
     if (mostrarDialogContraseña) {
-        DialogCambioContraseña(profesor = profesor, onPwdChange = { nueva -> pwd = nueva }, onDismiss = { mostrarDialogContraseña = false }, onActualizarProfesor = onActualizarPulsado,  contexto = contexto)
+        DialogCambioContraseña(profesor = profesor, onPwdChange = { nueva -> pwd = nueva
+            val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = pwd, dni = dni, username = username, email = email,
+                rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
+                                                                  onActualizarPulsado(profesorActu)}, onDismiss = { mostrarDialogContraseña = false }, onActualizarProfesor = onActualizarPulsado,  contexto = contexto)
     }
 }
 
@@ -388,17 +403,17 @@ fun DialogCambioContraseña(
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-               Text("Por motivos de seguridad, debes introducir tu contraseña actual y repetir dos veces la nueva contraseña")
                 //CONTRASEÑA ACTUAL
-                Row(modifier = Modifier.padding(16.dp)) {
-                    if(!verContraseña) {
+                if (profesor.pwd!=""){
+                    Text("Por motivos de seguridad, debes introducir tu contraseña actual y repetir dos veces la nueva contraseña")
+                    Row(modifier = Modifier.padding(16.dp)) {
                         TextField(
                             value = pwdActual,
                             onValueChange = { pwdActual = it },
                             label = {
                                 Text("Contraseña")
                             },
-                            visualTransformation = PasswordVisualTransformation(),
+                            visualTransformation = if (verContraseña) VisualTransformation.None else PasswordVisualTransformation(),
                             modifier = Modifier.width(200.dp),
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next
@@ -415,33 +430,6 @@ fun DialogCambioContraseña(
                             Image(
                                 modifier= Modifier.size(15.dp),
                                 painter = painterResource(R.drawable.ojo),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null
-                            )
-                        }
-                    }else{
-                        TextField(
-                            value = pwdActual,
-                            onValueChange = { pwdActual = it },
-                            label = {
-                                Text("Contraseña")
-                            },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next
-                            ),
-                            modifier = Modifier.width(200.dp),
-                            singleLine = true
-                        )
-                        Button(
-                            onClick = {
-                                verContraseña = !verContraseña
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(15.dp),
-                                painter = painterResource(R.drawable.invisible),
                                 contentScale = ContentScale.Crop,
                                 contentDescription = null
                             )
@@ -450,139 +438,91 @@ fun DialogCambioContraseña(
                 }
                 //NUEVA CONTRASEÑA
                 Row(modifier = Modifier.padding(16.dp,0.dp,16.dp,16.dp)) {
-                    if(!verContraseña) {
-                        TextField(
-                            value = nuevaPwd,
-                            onValueChange = { nuevaPwd = it },
-                            label = {
-                                Text("Contraseña nueva")
-                            },
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.width(200.dp),
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next
-                            ),
-                            singleLine = true
+                    TextField(
+                        value = nuevaPwd,
+                        onValueChange = { nuevaPwd = it },
+                        label = {
+                            Text("Contraseña nueva")
+                        },
+                        visualTransformation = if (verContraseña2) VisualTransformation.None else PasswordVisualTransformation(),
+                        modifier = Modifier.width(200.dp),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next
+                        ),
+                        singleLine = true
+                    )
+                    Button(
+                        onClick = {
+                            verContraseña2 = !verContraseña2
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            Color.Transparent,
+                            Color.Transparent,
+                            Color.Transparent,
+                            Color.Transparent
+                        ),
+                        modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)
+                    ) {
+                        Image(
+                            modifier = Modifier.size(15.dp),
+                            painter = painterResource(R.drawable.ojo),
+                            contentScale = ContentScale.Crop,
+                            contentDescription = null
                         )
-                        Button(
-                            onClick = {
-                                verContraseña2 = !verContraseña2
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(15.dp),
-                                painter = painterResource(R.drawable.ojo),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null
-                            )
-                        }
-                    }else{
-                        TextField(
-                            value = nuevaPwd,
-                            onValueChange = { nuevaPwd = it },
-                            label = {
-                                Text("Contraseña nueva")
-                            },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next
-                            ),
-                            modifier = Modifier.width(200.dp),
-                            singleLine = true
-                        )
-                        Button(
-                            onClick = {
-                                verContraseña2 = !verContraseña2
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(15.dp),
-                                painter = painterResource(R.drawable.invisible),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null
-                            )
-                        }
                     }
                 }
                 //REPETIR NUEVA CONTRASEÑA
                 Row(modifier = Modifier.padding(16.dp,0.dp,16.dp,16.dp)) {
-                    if(!verContraseña) {
-                        TextField(
-                            value = nuevaPwd2,
-                            onValueChange = { nuevaPwd2 = it },
-                            label = {
-                                Text("Repetir contraseña nueva")
-                            },
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.width(200.dp),
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next
-                            ),
-                            singleLine = true
+                    TextField(
+                        value = nuevaPwd2,
+                        onValueChange = { nuevaPwd2 = it },
+                        label = {
+                            Text("Repetir contraseña nueva")
+                        },
+                        visualTransformation = if (verContraseña3) VisualTransformation.None else PasswordVisualTransformation(),
+                        modifier = Modifier.width(200.dp),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next
+                        ),
+                        singleLine = true
+                    )
+                    Button(
+                        onClick = {
+                            verContraseña3 = !verContraseña3
+                        },
+                        colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
+                        modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
+                    ) {
+                        Image(
+                            modifier= Modifier.size(15.dp),
+                            painter = painterResource(R.drawable.ojo),
+                            contentScale = ContentScale.Crop,
+                            contentDescription = null
                         )
-                        Button(
-                            onClick = {
-                                verContraseña3 = !verContraseña3
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(15.dp),
-                                painter = painterResource(R.drawable.ojo),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null
-                            )
-                        }
-                    }else{
-                        TextField(
-                            value = nuevaPwd2,
-                            onValueChange = { nuevaPwd2 = it },
-                            label = {
-                                Text("Repetir contraseña nueva")
-                            },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Next
-                            ),
-                            modifier = Modifier.width(200.dp),
-                            singleLine = true
-                        )
-                        Button(
-                            onClick = {
-                                verContraseña3 = !verContraseña3
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(15.dp),
-                                painter = painterResource(R.drawable.invisible),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null
-                            )
-                        }
                     }
                 }
                 Row(modifier = Modifier.padding(16.dp,0.dp,16.dp,16.dp)) {
                     Button(
                         onClick = {
-                            pwdActualMD5 = encriptarMD5(pwdActual)
-                            if (pwdActualMD5 == pwd) {
-                                if (nuevaPwd == nuevaPwd2){
-                                    var profesor =  Profesor(idProfesor = profesor.idProfesor, pwd = nuevaPwd, dni = profesor.dni,
-                                        username = profesor.username, email = profesor.email, rol = profesor.rol, departamento = profesor.departamento,
-                                        apellidos = profesor.apellidos, nombre = profesor.nombre)
-                                    onActualizarProfesor(profesor)
-                                    onPwdChange(nuevaPwd)
-                                    onDismiss()
-                                }else{
-                                    Toast.makeText(contexto, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                            if(profesor.pwd != ""){
+                                pwdActualMD5 = encriptarMD5(pwdActual)
+                                if (pwdActualMD5 == pwd) {
+                                    if (nuevaPwd == nuevaPwd2){
+                                        var profesor =  Profesor(idProfesor = profesor.idProfesor, pwd = nuevaPwd, dni = profesor.dni,
+                                            username = profesor.username, email = profesor.email, rol = profesor.rol, departamento = profesor.departamento,
+                                            apellidos = profesor.apellidos, nombre = profesor.nombre)
+                                        onActualizarProfesor(profesor)
+                                        onPwdChange(nuevaPwd)
+                                        onDismiss()
+                                    }else{
+                                        Toast.makeText(contexto, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(contexto, "La contraseña actual no es correcta", Toast.LENGTH_SHORT).show()
                                 }
-                            } else {
-                                Toast.makeText(contexto, "La contraseña actual no es correcta", Toast.LENGTH_SHORT).show()
+                            }else{
+                                onPwdChange(nuevaPwd)
+                                onDismiss()
                             }
                         },
                         modifier = Modifier.padding(0.dp,0.dp,16.dp,0.dp)

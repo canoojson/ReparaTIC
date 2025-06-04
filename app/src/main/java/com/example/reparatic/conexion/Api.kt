@@ -6,6 +6,7 @@ import com.example.reparatic.modelo.Incidencia
 import com.example.reparatic.modelo.IncidenciaHardware
 import com.example.reparatic.modelo.IncidenciaSoftware
 import com.example.reparatic.modelo.LoginRequest
+import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.modelo.Rol
 import com.example.reparatic.modelo.TiposHw
@@ -154,6 +155,9 @@ interface Api {
     // ROLES
     @GET("roles")
     suspend fun obtenerRoles(): List<Rol>
+
+    @GET("roles/permisos")
+    suspend fun obtenerPermisos(): List<Permiso>
 
     @POST("roles")
     suspend fun insertarRol(

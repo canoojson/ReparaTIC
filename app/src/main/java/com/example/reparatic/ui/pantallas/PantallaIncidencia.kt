@@ -90,6 +90,9 @@ fun PantallaIncidencia(
     var nuevoComentario by remember { mutableStateOf("") }
     var tiempoInvertido by remember { mutableStateOf(incidencia.tiempo_invertido) }
     var fechaIncidencia by remember { mutableStateOf(incidencia.fecha_incidencia) }
+    if(fechaIncidencia==""){
+        fechaIncidencia = formatearFecha(getFechaActual())
+    }
     var responsable by remember { mutableStateOf(incidencia.responsable) }
     var departamento by remember { mutableStateOf(incidencia.departamento) }
     var estado by remember { mutableStateOf(incidencia.estado) }
@@ -189,9 +192,6 @@ fun PantallaIncidencia(
                     if(enModoEdicion){
                         Button(
                             onClick = {
-                                if(estado == null){
-                                    estado = listaEstados[1]
-                                }
 
                                 if(idIncidencia==0){
                                     var incidenciaNueva : Incidencia
@@ -211,7 +211,6 @@ fun PantallaIncidencia(
                                             onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
                                         }
                                     }else{
-                                        Log.v("Incidencia", incidenciaSoftware?.toString()?: "Patata")
                                          incidenciaNueva = Incidencia(
                                              idIncidencia = 0,
                                              tipo =tipo,
@@ -336,7 +335,7 @@ fun PantallaIncidencia(
                         readOnly = !enModoEdicion
                     )
                     TextField(
-                        value = fechaIncidencia?:"dd-MM-yyyy",
+                        value = fechaIncidencia?: formatearFecha(getFechaActual()),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Fecha incidencia") },
@@ -428,7 +427,7 @@ fun PantallaIncidencia(
                         modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
                     ) {
                         TextField(
-                            value = estado?.descrip?: "Pendiente",
+                            value = estado?.descrip?: "",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Estado") },
@@ -487,7 +486,7 @@ fun PantallaIncidencia(
                         }
                     }
                 }
-                if((estado?.descrip?: "Pendiente")=="Resuelta"){
+                if((estado?.descrip?: "Solucionada")=="Resuelta"){
                     Row {
                         TextField(
                             value = formatearFecha(getFechaActual()),
@@ -543,24 +542,14 @@ fun PantallaIncidencia(
                             }
                         }
                     }
-                    Button(
-                        onClick = {
-                            if(enModoEdicion) {
-                                mostrarDialogoUbicacion = true
-                            }else{
+                    if (ubicacion != null){
+                        Button(
+                            onClick = {
                                 mostrarDialogoUbicacionDetalles = true
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                        modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                    ) {
-                        if(enModoEdicion){
-                            Image(
-                                painter = painterResource(R.drawable.enlace_roto_),
-                                contentDescription = "Editar ubicación",
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }else {
+                            },
+                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
+                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
+                        ) {
                             Image(
                                 painter = painterResource(R.drawable.enlace_roto),
                                 contentDescription = "Editar ubicación",
@@ -899,11 +888,6 @@ fun PantallaIncidencia(
                 }
             }
         }
-    }
-
-    if(mostrarDialogoUbicacion){
-       DialogoUbicacion(onDismiss = {mostrarDialogoUbicacion = false}, ubicacion = ubicacion!!,
-            onUbicacionActualizada = onUbicacionActualizada, onUbicacionEliminada = onUbicacionEliminada)
     }
     if(mostrarDialogoUbicacionDetalles){
         DialogoUbicacionDetalles(onDismiss = {mostrarDialogoUbicacionDetalles = false}, ubicacion = ubicacion!!)

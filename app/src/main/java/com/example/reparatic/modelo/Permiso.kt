@@ -9,8 +9,5 @@ data class Permiso(
     val codPermiso: Int,
 
     @SerialName(value = "descrip")
-    val descrip: String,
-
-    @SerialName(value = "roles")
-    val roles: List<Rol>?
+    val descrip: String
 )

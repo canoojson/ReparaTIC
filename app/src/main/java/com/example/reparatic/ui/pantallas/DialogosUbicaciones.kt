@@ -31,7 +31,7 @@ import androidx.compose.ui.window.Dialog
 import com.example.reparatic.R
 import com.example.reparatic.modelo.Ubicacion
 
-@Composable
+/*@Composable
 fun DialogoUbicacion(
     onDismiss: () -> Unit,
     ubicacion: Ubicacion,
@@ -76,23 +76,6 @@ fun DialogoUbicacion(
                             contentDescription = "Guardar"
                         )
                     }
-
-                    Button(onClick = {
-                        onUbicacionEliminada(ubicacion.idUbicacion)
-                        ubicacionActualizada = Ubicacion(idUbicacion= 0, nombre = "", descrip = "")
-                        Toast.makeText(contexto, "Ubicación eliminada correctamente", Toast.LENGTH_SHORT).show()
-                    },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        ),
-                        colors = ButtonDefaults.buttonColors(Color.Red, Color.Black, Color.Red, Color.Black),
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                    ) {
-                        Text(text = "Eliminar")
-                    }
-
                 }
                 Row {
                     TextField(
@@ -126,7 +109,7 @@ fun DialogoUbicacion(
             }
         }
     }
-}
+}*/
 @Composable
 fun DialogoUbicacionDetalles(onDismiss: () -> Unit, ubicacion: Ubicacion){
     Dialog(

@@ -57,8 +57,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.reparatic.R
 import com.example.reparatic.datos.DrawerMenu
+import com.example.reparatic.modelo.Departamento
 import com.example.reparatic.modelo.Incidencia
 import com.example.reparatic.modelo.Profesor
+import com.example.reparatic.modelo.Rol
 import com.example.reparatic.modelo.Ubicacion
 import com.example.reparatic.ui.ViewModels.DepartamentoViewModel
 import com.example.reparatic.ui.ViewModels.EstadoViewModel
@@ -70,12 +72,17 @@ import com.example.reparatic.ui.ViewModels.ProfesorViewModel
 import com.example.reparatic.ui.ViewModels.RolViewModel
 import com.example.reparatic.ui.ViewModels.TiposHwViewModel
 import com.example.reparatic.ui.ViewModels.UbicacionViewModel
+import com.example.reparatic.ui.pantallas.DepartamentoDialog
 import com.example.reparatic.ui.pantallas.PantallaIncidencia
+import com.example.reparatic.ui.pantallas.PantallaInicioDepartamentos
 import com.example.reparatic.ui.pantallas.PantallaInicioIncidencias
+import com.example.reparatic.ui.pantallas.PantallaInicioProfesores
+import com.example.reparatic.ui.pantallas.PantallaInicioRoles
 import com.example.reparatic.ui.pantallas.PantallaInicioUbicaciones
 import com.example.reparatic.ui.pantallas.PantallaLogin
-import com.example.reparatic.ui.pantallas.PantallaPerfil
+import com.example.reparatic.ui.pantallas.PantallaProfesor
 import com.example.reparatic.ui.pantallas.PantallaUbicacion
+import com.example.reparatic.ui.pantallas.RolDialog
 import com.example.reparatic.ui.pantallas.getFechaActual
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -91,8 +98,13 @@ enum class Pantallas(@StringRes val titulo: Int) {
         Ubicacion(titulo = R.string.ubicacion),
         NuevaUbicacion(titulo = R.string.nueva_ubicacion),
     Departamentos(titulo = R.string.departamentos),
+        Departamento(titulo= R.string.departamento),
+        NuevoDepartamento(titulo = R.string.nuevo_departamento),
     Profesores(titulo = R.string.profesores),
-    GestionPermisos(titulo = R.string.gestion_permisos)
+        Profesor(titulo = R.string.profesor),
+        NuevoProfesor(titulo = R.string.nuevo_profesor),
+    GestionPermisos(titulo = R.string.gestion_permisos),
+        NuevoRol(titulo = R.string.nuevorol)
 }
 
 val menu = arrayOf(
@@ -176,22 +188,23 @@ fun ReparaTICApp(
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
-                /*
+
                 if(pantallaActual == Pantallas.Profesores){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.ProfesorNuevo.name) }) {
+                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevoProfesor.name) }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
                 if(pantallaActual == Pantallas.Departamentos){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.DepartamentoNuevo.name) }) {
+                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevoDepartamento.name) }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
+
                 if(pantallaActual == Pantallas.GestionPermisos){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.RolNuevo.name) }) {
+                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevoRol.name) }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
-                }*/
+                }
             }
         ) {
             innerPadding ->
@@ -224,6 +237,7 @@ fun ReparaTICApp(
                 composable(route = Pantallas.Incidencias.name) {
                     PantallaInicioIncidencias(
                         appUIState = uiStateIncidencia,
+                        login = viewModelLogin.login,
                         onIncidenciasObtenidas = {viewModelIncidecia.obtenerIncidencias()},
                         onIncidenciaPulsada = {
                             viewModelIncidecia.actualizarIncidenciaPulsada(it)
@@ -299,7 +313,6 @@ fun ReparaTICApp(
                             navController.navigate(route = Pantallas.Incidencias.name)
                         },
                         onActualizarPulsado = {
-                            Log.v("Cguuigfeihsjgfi", "onActualizarPulsado")
                             viewModelIncidecia.actualizarIncidencia(it.idIncidencia, it)
                         },
                         onEliminarPulsado = {
@@ -321,11 +334,15 @@ fun ReparaTICApp(
                     )
                 }
                 composable(route = Pantallas.Perfil.name){
-                    PantallaPerfil(
+                    PantallaProfesor(
                         profesor = viewModelLogin.login,
                         uiStateDepto = uiStateDepartamento,
                         uiStateRol = uiStateRol,
                         uiStateProfesor = uiStateProfesor,
+                        onInsertarPulsado = {
+                            viewModelProfesor.insertarProfesor(it)
+                            navController.navigate(route = Pantallas.Profesores.name)
+                        },
                         onActualizarPulsado = {
                             viewModelProfesor.actualizarProfesor(it.idProfesor, it)
                         },
@@ -378,6 +395,133 @@ fun ReparaTICApp(
                             navController.navigate(route = Pantallas.Ubicaciones.name)
                         }
                     )
+                }
+                composable(route= Pantallas.Departamentos.name) {
+                    PantallaInicioDepartamentos(
+                        appUIState = uiStateDepartamento,
+                        onDepartamentosObtenidos = {
+                            viewModelDepartamento.obtenerDepartamentos()
+                        },
+                        onDepartamentoPulsado = {
+                            viewModelDepartamento.actualizarDepartamentoPulsado(it)
+                            navController.navigate(route = Pantallas.Departamento.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.Departamento.name) {
+                    DepartamentoDialog(
+                        onDismiss = { navController.navigate(route = Pantallas.Departamentos.name) },
+                        onActualizarPulsado = {
+                            viewModelDepartamento.actualizarDepartamento(it.codDpto, it)
+                            navController.navigate(route = Pantallas.Departamentos.name)
+                        },
+                        onEliminarPulsado = {
+                            viewModelDepartamento.eliminarDepartamento(it.codDpto)
+                            navController.navigate(route = Pantallas.Departamentos.name)
+                        },
+                        onInsertarPulsado = {
+                            viewModelDepartamento.insertarDepartamento(it)
+                            navController.navigate(route = Pantallas.Departamentos.name)
+                        },
+                        departamento = viewModelDepartamento.departamentoPulsado
+                    )
+                }
+                composable(route= Pantallas.NuevoDepartamento.name) {
+                    DepartamentoDialog(
+                        onDismiss = { navController.navigate(route = Pantallas.Departamentos.name) },
+                        onActualizarPulsado = {
+                            viewModelDepartamento.actualizarDepartamento(it.codDpto, it)
+                            navController.navigate(route = Pantallas.Departamentos.name)
+                        },
+                        onEliminarPulsado = {
+                            viewModelDepartamento.eliminarDepartamento(it.codDpto)
+                            navController.navigate(route = Pantallas.Departamentos.name)
+                        },
+                        onInsertarPulsado = {
+                            viewModelDepartamento.insertarDepartamento(it)
+                            navController.navigate(route = Pantallas.Departamentos.name)
+                        },
+                        departamento = Departamento(codDpto = 0, nombreDpto = "")
+                    )
+                }
+                composable(route= Pantallas.Profesores.name) {
+                    PantallaInicioProfesores(
+                        appUIState = uiStateProfesor,
+                        onProfesoresObtenidos = {
+                            viewModelProfesor.obtenerProfesores()
+                        },
+                        onProfesorPulsado = {
+                            viewModelProfesor.actualizarProfesorPulsado(it)
+                            navController.navigate(route = Pantallas.Profesor.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.Profesor.name) {
+                    PantallaProfesor(
+                        profesor = viewModelProfesor.profesorPulsado,
+                        uiStateDepto = uiStateDepartamento,
+                        uiStateRol = uiStateRol,
+                        uiStateProfesor = uiStateProfesor,
+                        onInsertarPulsado = {
+                            viewModelProfesor.insertarProfesor(it)
+                            navController.navigate(route = Pantallas.Profesores.name)
+                        },
+                        onActualizarPulsado = {
+                            viewModelProfesor.actualizarProfesor(it.idProfesor, it)
+                        },
+                        onEliminarPulsado = {
+                            viewModelProfesor.eliminarProfesor(it.idProfesor)
+                            navController.navigate(route = Pantallas.Profesores.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.NuevoProfesor.name) {
+                    PantallaProfesor(
+                        profesor = Profesor(idProfesor = 0, pwd = "", dni = "", username = "", email = "", rol = null, departamento = null, apellidos = "", nombre = ""),
+                        uiStateDepto = uiStateDepartamento,
+                        uiStateRol = uiStateRol,
+                        uiStateProfesor = uiStateProfesor,
+                        onInsertarPulsado = {
+                            viewModelProfesor.insertarProfesor(it)
+                            navController.navigate(route = Pantallas.Profesores.name)
+                        },
+                        onActualizarPulsado = {
+                            viewModelProfesor.actualizarProfesor(it.idProfesor, it)
+                        },
+                        onEliminarPulsado = {
+                            viewModelProfesor.eliminarProfesor(it.idProfesor)
+                            navController.navigate(route = Pantallas.Profesores.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.GestionPermisos.name) {
+                    PantallaInicioRoles(
+                        uiState = uiStateRol,
+                        onRolesObtenidos = {
+                            viewModelRol.obtenerRoles()
+                        },
+                        onRolSeleccionado = {
+                            viewModelRol.actualizarRolPulsado(it)
+                        },
+                        onRolEliminado = {
+                            viewModelRol.eliminarRol(it.idRol)
+                        },
+                        rolSeleccionado = viewModelRol.rolPulsado,
+                        onActualizarRol = {
+                            viewModelRol.actualizarRol(it.idRol, it)
+                        }
+                    )
+                }
+                composable(route= Pantallas.NuevoRol.name) {
+                    RolDialog(
+                        onDismiss = { navController.navigate(route = Pantallas.GestionPermisos.name) },
+                        onInsertarPulsado = {
+                            viewModelRol.insertarRol(it)
+                            navController.navigate(route = Pantallas.GestionPermisos.name)
+                        },
+                        rol = Rol(idRol = 0, descrip = "", permisos = emptyList())
+                    )
+
                 }
             }
         }

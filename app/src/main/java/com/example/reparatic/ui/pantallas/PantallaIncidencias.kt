@@ -21,11 +21,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.reparatic.modelo.Incidencia
+import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.ui.ViewModels.IncidenciaUIState
 
 @Composable
 fun PantallaInicioIncidencias(
     appUIState: IncidenciaUIState,
+    login: Profesor,
     onIncidenciasObtenidas: ()-> Unit,
     onIncidenciaPulsada: (incidencia: Incidencia) -> Unit,
     modifier: Modifier = Modifier
@@ -35,6 +37,7 @@ fun PantallaInicioIncidencias(
         is IncidenciaUIState.Cargando -> PantallaCargando(modifier = modifier.fillMaxWidth())
         is IncidenciaUIState.ObtenerExito -> PantallaIncidencias(
             lista = appUIState.incidencias,
+            login = login,
             onIncidenciaPulsada = onIncidenciaPulsada,
             modifier= modifier.fillMaxWidth()
         )
@@ -48,6 +51,7 @@ fun PantallaInicioIncidencias(
 @Composable
 fun PantallaIncidencias(
     lista: List<Incidencia>,
+    login: Profesor,
     onIncidenciaPulsada: (incidencia: Incidencia) -> Unit,
     modifier: Modifier = Modifier
 ){

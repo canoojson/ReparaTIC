@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.reparatic.ReparaTICAplicacion
 import com.example.reparatic.datos.RolRepositorio
+import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Rol
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -19,7 +20,7 @@ import retrofit2.Response
 import java.io.IOException
 
 sealed interface RolUIState {
-    data class ObtenerExito(val roles: List<Rol>) : RolUIState
+    data class ObtenerExito(val roles: List<Rol>, val permisos: List<Permiso>) : RolUIState
     data class CrearExito(val rol: Rol) : RolUIState
     data class ActualizarExito(val rol: Response<Rol>) : RolUIState
     data class EliminarExito(val id: Int) : RolUIState
@@ -39,14 +40,32 @@ class RolViewModel(private val rolRepositorio: RolRepositorio) : ViewModel() {
 
     init {
         obtenerRoles()
+        obtenerPermisos()
     }
+
+    var listaRoles by mutableStateOf(listOf<Rol>())
+    var listaPermisos by mutableStateOf(listOf<Permiso>())
 
     fun obtenerRoles() {
         viewModelScope.launch {
             rolUIState = RolUIState.Cargando
             rolUIState = try {
-                val listaRoles = rolRepositorio.obtenerRoles()
-                RolUIState.ObtenerExito(listaRoles)
+                listaRoles = rolRepositorio.obtenerRoles()
+                RolUIState.ObtenerExito(listaRoles, listaPermisos)
+            } catch (e: IOException) {
+                RolUIState.Error
+            } catch (e: HttpException) {
+                RolUIState.Error
+            }
+        }
+    }
+
+    fun obtenerPermisos() {
+        viewModelScope.launch {
+            rolUIState = RolUIState.Cargando
+            rolUIState = try {
+                listaPermisos = rolRepositorio.obtenerPermisos()
+                RolUIState.ObtenerExito(listaRoles, listaPermisos)
             } catch (e: IOException) {
                 RolUIState.Error
             } catch (e: HttpException) {
@@ -74,6 +93,7 @@ class RolViewModel(private val rolRepositorio: RolRepositorio) : ViewModel() {
             rolUIState = RolUIState.Cargando
             rolUIState = try {
                 val rolActualizado = rolRepositorio.actualizarRol(id, rol)
+                rolPulsado = rol
                 RolUIState.ActualizarExito(rolActualizado)
             } catch (e: IOException) {
                 RolUIState.Error
@@ -88,6 +108,7 @@ class RolViewModel(private val rolRepositorio: RolRepositorio) : ViewModel() {
             rolUIState = RolUIState.Cargando
             rolUIState = try {
                 val rolEliminado = rolRepositorio.eliminarRol(id)
+                rolPulsado = Rol(idRol = 0, descrip = "", permisos = emptyList())
                 RolUIState.EliminarExito(id)
             } catch (e: IOException) {
                 RolUIState.Error

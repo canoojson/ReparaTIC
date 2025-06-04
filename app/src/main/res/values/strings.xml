@@ -15,4 +15,9 @@
     <string name="gestion_permisos">Gestión de permisos</string>
     <string name="ubicacion">Ubicación</string>
     <string name="nueva_ubicacion">Nueva ubicación</string>
+    <string name="departamento">Departamento</string>
+    <string name="nuevo_departamento">Nuevo departamento</string>
+    <string name="profesor">Profesor</string>
+    <string name="nuevo_profesor">Nuevo profesor</string>
+    <string name="nuevorol">Nuevo rol</string>
 </resources>
