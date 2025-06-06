@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -76,7 +77,7 @@ fun ListaRoles(
         items(roles) { rol ->
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .width(400.dp)
                     .clickable { onRolClick(rol) }
                     .padding(vertical = 4.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -107,12 +108,13 @@ fun EditorRol(
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .padding(16.dp),
+            .fillMaxWidth()
+            .padding(0.dp,16.dp,64.dp,16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Editar Rol", style = MaterialTheme.typography.headlineSmall)
 
-        Row {
+        Row() {
             Button(
                 onClick = {
                     val nuevosPermisos = todosLosPermisos.filter { permisosSeleccionados.contains(it.codPermiso) }
@@ -137,7 +139,7 @@ fun EditorRol(
                     modifier= Modifier.size(20.dp),
                     imageVector = Icons.Filled.Delete,
                     contentScale = ContentScale.Crop,
-                    contentDescription = "Eliminar"
+                    contentDescription = stringResource(R.string.eliminar)
                 )
             }
         }
@@ -159,10 +161,6 @@ fun EditorRol(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = permiso.descrip,
-                        modifier = Modifier.weight(1f)
-                    )
                     Checkbox(
                         checked = permisosSeleccionados.contains(permiso.codPermiso),
                         onCheckedChange = { isChecked ->
@@ -172,6 +170,10 @@ fun EditorRol(
                                 permisosSeleccionados - permiso.codPermiso
                             }
                         }
+                    )
+                    Text(
+                        text = permiso.descrip,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }

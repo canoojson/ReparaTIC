@@ -24,6 +24,7 @@ interface ContenedorApp{
 class IncidenciaContenedorApp(private val context: Context): ContenedorApp{
     private val baseUrl = "http://192.168.1.14:8080/api/"
 
+
     @OptIn(ExperimentalSerializationApi::class)
     private val json = Json {
         ignoreUnknownKeys = true

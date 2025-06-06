@@ -50,8 +50,8 @@ fun PantallaLogin(
         Card(elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally ,verticalArrangement = Arrangement.Center) {
                 Image(
-                    modifier= Modifier.size(250.dp),
-                    imageVector = Icons.Filled.Edit,
+                    modifier= Modifier.size(175.dp),
+                    painter = painterResource(R.drawable.reparaticlogo),
                     contentScale = ContentScale.Crop,
                     contentDescription = null
                 )

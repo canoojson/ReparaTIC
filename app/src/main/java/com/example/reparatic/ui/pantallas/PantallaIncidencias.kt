@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.reparatic.modelo.Incidencia
+import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.ui.ViewModels.IncidenciaUIState
 
@@ -55,45 +56,90 @@ fun PantallaIncidencias(
     onIncidenciaPulsada: (incidencia: Incidencia) -> Unit,
     modifier: Modifier = Modifier
 ){
+    val permiso: Permiso = Permiso(codPermiso = 7, descrip = "Ver todas las incidencias de todos los usuarios")
+
     LazyColumn(modifier = modifier) {
         items(lista){ incidencia ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        onIncidenciaPulsada(incidencia)
-                    }
-                    .padding(8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ){
-                Row(
+            if(login.rol!!.permisos.contains(permiso)){
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Row {
-                            Text(text = incidencia.descripcion)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "#"+incidencia.idIncidencia.toString(),
-                                color = Color.Gray,
-                                fontSize = 14.sp)
+                        .clickable {
+                            onIncidenciaPulsada(incidencia)
                         }
-                        Text(text = incidencia.profesor!!.nombre + " " + incidencia.profesor.apellidos)
-                        Text(text= incidencia.fecha_incidencia.toString())
+                        .padding(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ){
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Row {
+                                Text(text = incidencia.descripcion)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "#"+incidencia.idIncidencia.toString(),
+                                    color = Color.Gray,
+                                    fontSize = 14.sp)
+                            }
+                            Text(text = incidencia.profesor!!.nombre + " " + incidencia.profesor.apellidos)
+                            Text(text= incidencia.fecha_incidencia.toString())
+                        }
+                        Column(horizontalAlignment = Alignment.End,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = modifier.fillMaxWidth()
+                        )
+                        {
+                            Text(text = (incidencia.responsable?.nombre?: "Sin") + " " + (incidencia.responsable?.apellidos?:"Asignar"))
+                            Text(text = incidencia.estado?.descrip?:"Sin estado")
+                            Text(text = incidencia.ubicacion!!.nombre)
+                        }
                     }
-                    Column(horizontalAlignment = Alignment.End,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = modifier.fillMaxWidth()
-                    )
-                    {
-                        Text(text = (incidencia.responsable?.nombre?: "Sin") + " " + (incidencia.responsable?.apellidos?:"Asignar"))
-                        Text(text = incidencia.estado!!.descrip)
-                        Text(text = incidencia.ubicacion!!.nombre)
+                }
+            }else{
+                if(incidencia.profesor == login){
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onIncidenciaPulsada(incidencia)
+                            }
+                            .padding(8.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ){
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Row {
+                                    Text(text = incidencia.descripcion)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "#"+incidencia.idIncidencia.toString(),
+                                        color = Color.Gray,
+                                        fontSize = 14.sp)
+                                }
+                                Text(text = incidencia.profesor!!.nombre + " " + incidencia.profesor.apellidos)
+                                Text(text= incidencia.fecha_incidencia.toString())
+                            }
+                            Column(horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = modifier.fillMaxWidth()
+                            )
+                            {
+                                Text(text = (incidencia.responsable?.nombre?: "Sin") + " " + (incidencia.responsable?.apellidos?:"Asignar"))
+                                Text(text = incidencia.estado?.descrip?:"Sin estado")
+                                Text(text = incidencia.ubicacion!!.nombre)
+                            }
+                        }
                     }
                 }
             }
+
         }
     }
 }

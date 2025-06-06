@@ -20,4 +20,5 @@
     <string name="profesor">Profesor</string>
     <string name="nuevo_profesor">Nuevo profesor</string>
     <string name="nuevorol">Nuevo rol</string>
+    <string name="eliminar">Eliminar</string>
 </resources>

@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.reparatic.R
 import com.example.reparatic.modelo.Departamento
+import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.modelo.Rol
 import com.example.reparatic.ui.ViewModels.DepartamentoUIState
@@ -59,6 +61,7 @@ import com.example.reparatic.ui.encriptarMD5
 @Composable
 fun PantallaProfesor(
     profesor: Profesor,
+    login: Profesor,
     uiStateDepto: DepartamentoUIState,
     uiStateRol: RolUIState,
     uiStateProfesor : ProfesorUIState,
@@ -73,8 +76,8 @@ fun PantallaProfesor(
         }else{
             mutableStateOf(false)
         }
-
     }
+    val permiso = Permiso(codPermiso = 8, descrip = "Borrar administradores")
     var mostrarDialogContraseña by remember { mutableStateOf(false) }
     val contexto = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
@@ -140,29 +143,30 @@ fun PantallaProfesor(
         ) {
             Card(
                 modifier = Modifier
-                    .width(400.dp)
+                    .width(250.dp)
                     .padding(8.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .padding(0.dp, 0.dp, 0.dp, 150.dp)
                 ) {
                     Image(
-                        modifier = Modifier.size(250.dp),
+                        modifier = Modifier.size(125.dp),
                         imageVector = Icons.Filled.AccountCircle,
                         contentScale = ContentScale.Crop,
                         contentDescription = "Foto de perfil"
                     )
                     Text(
                         nombre,
-                        fontSize = 50.sp
+                        fontSize = 25.sp
                     )
                     Text(
                         apellidos,
-                        fontSize = 50.sp
+                        fontSize = 25.sp
                     )
 
                 }
@@ -188,7 +192,7 @@ fun PantallaProfesor(
                                 pressedElevation = 15.dp,
                                 disabledElevation = 0.dp
                             ),
-                            modifier = Modifier.padding(32.dp, 32.dp, 0.dp, 0.dp)
+                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
                         ) {
                             if(modoEdicion){
                                 Image(
@@ -206,24 +210,26 @@ fun PantallaProfesor(
                             }
                         }
                         //Si no lo estamos, mostramos el de editar
-                    Button(
-                        onClick = {
+                    if(login.rol?.permisos?.contains(permiso)?: false && login.idProfesor!=profesor.idProfesor){
+                        Button(
+                            onClick = {
                                 onEliminarPulsado(perfil)
-                        },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        ),
-                        colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
-                        modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
-                    ) {
-                        Image(
-                            modifier= Modifier.size(20.dp),
-                            imageVector = Icons.Filled.Delete,
-                            contentScale = ContentScale.Crop,
-                            contentDescription = "Eliminar"
-                        )
+                            },
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 10.dp,
+                                pressedElevation = 15.dp,
+                                disabledElevation = 0.dp
+                            ),
+                            colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
+                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                        ) {
+                            Image(
+                                modifier= Modifier.size(20.dp),
+                                imageVector = Icons.Filled.Delete,
+                                contentScale = ContentScale.Crop,
+                                contentDescription = stringResource(R.string.eliminar)
+                            )
+                        }
                     }
                     if(profesor.idProfesor!=0){
                         Button(
@@ -243,6 +249,22 @@ fun PantallaProfesor(
                                 Text(text = "Cambiar contraseña")
                             }
                         }
+                        Button(
+                            onClick = {
+                                val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = encriptarMD5("-a123456"), dni = dni, username = username, email = email,
+                                    rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
+                                Toast.makeText(contexto, "La contraseña ha pasado a ser -a123456", Toast.LENGTH_LONG).show()
+                                onActualizarPulsado(profesorActu)
+                            },
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 10.dp,
+                                pressedElevation = 15.dp,
+                                disabledElevation = 0.dp
+                            ),
+                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                        ) {
+                            Text("Resetear contraseña")
+                        }
                     }
                 }
                 Row {
@@ -251,15 +273,17 @@ fun PantallaProfesor(
                         onValueChange = { nombre = it },
                         label = { Text("Nombre") },
                         readOnly = !modoEdicion,
-                        modifier = Modifier.width(180.dp)
-                            .padding(32.dp, 32.dp, 0.dp, 0.dp)
+                        modifier = Modifier
+                            .width(180.dp)
+                            .padding(16.dp, 32.dp, 16.dp, 0.dp)
                     )
                     TextField(
                         value = apellidos,
                         onValueChange = { apellidos = it },
                         label = { Text("Apellidos") },
                         readOnly = !modoEdicion,
-                        modifier = Modifier.width(180.dp)
+                        modifier = Modifier
+                            .width(180.dp)
                             .padding(16.dp, 32.dp, 0.dp, 0.dp)
                     )
                     TextField(
@@ -267,8 +291,9 @@ fun PantallaProfesor(
                         onValueChange = { email = it },
                         label = { Text("Email") },
                         readOnly = !modoEdicion,
-                        modifier = Modifier.width(400.dp)
-                            .padding(16.dp, 32.dp, 0.dp, 0.dp)
+                        modifier = Modifier
+                            .width(400.dp)
+                            .padding(16.dp, 32.dp, 16.dp, 0.dp)
                     )
                 }
                 Row {
@@ -277,8 +302,9 @@ fun PantallaProfesor(
                         onValueChange = { dni = it },
                         label = { Text("DNI") },
                         readOnly = !modoEdicion,
-                        modifier = Modifier.width(180.dp)
-                            .padding(32.dp, 16.dp, 0.dp, 0.dp)
+                        modifier = Modifier
+                            .width(180.dp)
+                            .padding(16.dp, 16.dp, 0.dp, 0.dp)
                     )
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -321,7 +347,7 @@ fun PantallaProfesor(
                                 expanded2 = !expanded2
                             }
                         },
-                        modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)
+                        modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)
                     ) {
                         TextField(
                             value = rol?.descrip?:"",
@@ -349,14 +375,15 @@ fun PantallaProfesor(
                         }
                     }
                 }
-                Row(modifier = Modifier.padding(32.dp, 16.dp, 0.dp, 0.dp)) {
+                Row(modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)) {
                     TextField(
                         value = username,
                         onValueChange = { username = it },
                         label = { Text("Nombre de usuario") },
                         readOnly = !modoEdicion,
-                        modifier = Modifier.width(200.dp)
-                            .padding(0.dp,0.dp,16.dp,0.dp)
+                        modifier = Modifier
+                            .width(200.dp)
+                            .padding(0.dp, 0.dp, 16.dp, 0.dp)
                     )
                 }
             }

@@ -1,5 +1,7 @@
 package com.example.reparatic.ui
 
+import android.app.Application
+import android.content.res.Configuration
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
@@ -13,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -35,6 +39,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -47,7 +52,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.UiMode
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -55,6 +62,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.example.reparatic.R
 import com.example.reparatic.datos.DrawerMenu
 import com.example.reparatic.modelo.Departamento
@@ -336,6 +344,7 @@ fun ReparaTICApp(
                 composable(route = Pantallas.Perfil.name){
                     PantallaProfesor(
                         profesor = viewModelLogin.login,
+                        login = viewModelLogin.login,
                         uiStateDepto = uiStateDepartamento,
                         uiStateRol = uiStateRol,
                         uiStateProfesor = uiStateProfesor,
@@ -459,6 +468,7 @@ fun ReparaTICApp(
                 composable(route= Pantallas.Profesor.name) {
                     PantallaProfesor(
                         profesor = viewModelProfesor.profesorPulsado,
+                        login = viewModelLogin.login,
                         uiStateDepto = uiStateDepartamento,
                         uiStateRol = uiStateRol,
                         uiStateProfesor = uiStateProfesor,
@@ -479,6 +489,7 @@ fun ReparaTICApp(
                     PantallaProfesor(
                         profesor = Profesor(idProfesor = 0, pwd = "", dni = "", username = "", email = "", rol = null, departamento = null, apellidos = "", nombre = ""),
                         uiStateDepto = uiStateDepartamento,
+                        login = viewModelLogin.login,
                         uiStateRol = uiStateRol,
                         uiStateProfesor = uiStateProfesor,
                         onInsertarPulsado = {
@@ -537,58 +548,68 @@ private fun DrawerContent(
     onMenuClick: (String) -> Unit,
     onCerrarSesion: () -> Unit,
 ) {
+
+
     Column(
-        modifier = Modifier.fillMaxSize()
-    ){
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-        ){
+        ) {
             Image(
-                modifier= Modifier.size(150.dp)
+                modifier = Modifier
+                    .size(150.dp)
                     .align(Alignment.Center),
                 imageVector = Icons.Filled.AccountCircle,
                 contentScale = ContentScale.Crop,
                 contentDescription = "Foto de perfil"
             )
             Text(
-                text = login.nombre + " " + login.apellidos,
+                text = "${login.nombre} ${login.apellidos}",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
+
         Spacer(modifier = Modifier.size(50.dp))
+
         menu.forEach {
             NavigationDrawerItem(
                 label = {
                     Text(text = stringResource(id = it.titulo))
                 },
-                icon = { Icon(imageVector = it.icono, contentDescription = null)},
+                icon = {
+                    Icon(imageVector = it.icono, contentDescription = null)
+                },
                 selected = it.titulo == pantallaActual.titulo,
                 onClick = {
                     onMenuClick(it.ruta)
                 }
             )
         }
-        Row(modifier = Modifier.fillMaxHeight(),
-            verticalAlignment = Alignment.Bottom) {
 
-            NavigationDrawerItem(
-                label = {
-                    Text(text = stringResource(id = R.string.cerrar_sesion))
-                },
-                icon = { Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = null)},
-                selected = false,
-                onClick = {
-                    onCerrarSesion()
-                    onMenuClick(Pantallas.Login.name)
-                }
-            )
-        }
+        Spacer(modifier = Modifier.height(48.dp))
 
+        NavigationDrawerItem(
+            label = {
+                Text(text = stringResource(id = R.string.cerrar_sesion))
+            },
+            icon = {
+                Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = null)
+            },
+            selected = false,
+            onClick = {
+                onCerrarSesion()
+                onMenuClick(Pantallas.Login.name)
+            }
+        )
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

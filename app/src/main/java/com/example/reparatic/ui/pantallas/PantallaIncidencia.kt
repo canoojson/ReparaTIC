@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -40,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +54,7 @@ import com.example.reparatic.modelo.Estado
 import com.example.reparatic.modelo.Incidencia
 import com.example.reparatic.modelo.IncidenciaHardware
 import com.example.reparatic.modelo.IncidenciaSoftware
+import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.modelo.TiposHw
 import com.example.reparatic.modelo.Ubicacion
@@ -105,6 +110,10 @@ fun PantallaIncidencia(
     var clave by remember { mutableStateOf(incidenciaSoftware?.clave?: "") }
     var so by remember { mutableStateOf(incidenciaSoftware?.SO?: "") }
     var fechaResolucion by remember { mutableStateOf(incidencia.fecha_resolucion) }
+
+    //Permisos
+    val permiso = Permiso(codPermiso = 2, descrip = "Modificar/Borrar incidencias")
+    val permiso2 = Permiso(codPermiso = 1, descrip = "Añadir incidencias")
 
     // Remember de listas desplegables
     var expanded by remember { mutableStateOf(false) }
@@ -188,132 +197,229 @@ fun PantallaIncidencia(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Row( ) {
+
                     //Aqui mostramos el boton de Guardar si estamos en el modo de edicion
-                    if(enModoEdicion){
-                        Button(
-                            onClick = {
+                    if(login.rol!!.permisos.isNotEmpty()){
+                        if(login.rol.permisos.contains(permiso)){
+                            if(enModoEdicion){
+                                Button(
+                                    onClick = {
 
-                                if(idIncidencia==0){
-                                    var incidenciaNueva : Incidencia
-                                    incidenciaHardware = IncidenciaHardware(idh = 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
-                                    incidenciaSoftware = IncidenciaSoftware(ids = 0, software = software, clave = clave, SO = so)
-                                    if(tipo == "HW"){
+                                        if(idIncidencia==0){
+                                            var incidenciaNueva : Incidencia
+                                            incidenciaHardware = IncidenciaHardware(idh = 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
+                                            incidenciaSoftware = IncidenciaSoftware(ids = 0, software = software, clave = clave, SO = so)
+                                            if(tipo == "HW"){
 
-                                         incidenciaNueva = Incidencia(
-                                             idIncidencia = 0,
-                                             tipo =tipo,
-                                             fecha_incidencia = fechaIncidencia,
-                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
-                                             tiempo_invertido = tiempoInvertido,
-                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
-                                        if(incidenciaSoftware != null){
-                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                                incidenciaNueva = Incidencia(
+                                                    idIncidencia = 0,
+                                                    tipo =tipo,
+                                                    fecha_incidencia = fechaIncidencia,
+                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                                    descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
+                                                    tiempo_invertido = tiempoInvertido,
+                                                    mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
+                                                if(incidenciaSoftware != null){
+                                                    onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                                }
+                                            }else{
+                                                incidenciaNueva = Incidencia(
+                                                    idIncidencia = 0,
+                                                    tipo =tipo,
+                                                    fecha_incidencia = fechaIncidencia,
+                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                                    descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
+                                                    tiempo_invertido = tiempoInvertido,
+                                                    mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
+                                                if(incidenciaHardware != null){
+                                                    onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                                }
+                                            }
+                                            onInsertarPulsado(incidenciaNueva)
+                                            Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
+                                        }else{
+                                            var incidenciaActu : Incidencia
+                                            if(tipo == "HW"){
+                                                incidenciaHardware = IncidenciaHardware(idh = incidencia.incidenciaHardware?.idh?: 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
+                                                incidenciaActu = Incidencia(
+                                                    idIncidencia = incidencia.idIncidencia,
+                                                    tipo =tipo,
+                                                    fecha_incidencia = fechaIncidencia,
+                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
+                                                    descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable,
+                                                    fecha_resolucion = fechaResolucion, tiempo_invertido = tiempoInvertido,
+                                                    mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
+                                                if(incidenciaSoftware != null){
+                                                    onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                                }
+                                            }else{
+                                                incidenciaSoftware = IncidenciaSoftware(ids = incidencia.incidenciaSoftware?.ids?: 0, software = software, clave = clave, SO = so)
+                                                incidenciaActu = Incidencia(
+                                                    idIncidencia = incidencia.idIncidencia,
+                                                    tipo =tipo,
+                                                    fecha_incidencia = fechaIncidencia,
+                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
+                                                    descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
+                                                    tiempo_invertido = tiempoInvertido,
+                                                    mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
+                                                if(incidenciaHardware != null){
+                                                    onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                                }
+                                            }
+                                            onActualizarPulsado(incidenciaActu)
+                                            Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
                                         }
-                                    }else{
-                                         incidenciaNueva = Incidencia(
-                                             idIncidencia = 0,
-                                             tipo =tipo,
-                                             fecha_incidencia = fechaIncidencia,
-                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
-                                             tiempo_invertido = tiempoInvertido,
-                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
-                                        if(incidenciaHardware != null){
-                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
-                                        }
-                                    }
-                                    onInsertarPulsado(incidenciaNueva)
-                                    Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
-                                }else{
-                                    var incidenciaActu : Incidencia
-                                    if(tipo == "HW"){
-                                        incidenciaHardware = IncidenciaHardware(idh = incidencia.incidenciaHardware?.idh?: 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
-                                        incidenciaActu = Incidencia(
-                                            idIncidencia = incidencia.idIncidencia,
-                                            tipo =tipo,
-                                            fecha_incidencia = fechaIncidencia,
-                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable,
-                                            fecha_resolucion = fechaResolucion, tiempo_invertido = tiempoInvertido,
-                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
-                                        if(incidenciaSoftware != null){
-                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
-                                        }
-                                    }else{
-                                        incidenciaSoftware = IncidenciaSoftware(ids = incidencia.incidenciaSoftware?.ids?: 0, software = software, clave = clave, SO = so)
-                                        incidenciaActu = Incidencia(
-                                            idIncidencia = incidencia.idIncidencia,
-                                            tipo =tipo,
-                                            fecha_incidencia = fechaIncidencia,
-                                            fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
-                                            descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
-                                            tiempo_invertido = tiempoInvertido,
-                                            mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
-                                        if(incidenciaHardware != null){
-                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
-                                        }
-                                    }
-                                    onActualizarPulsado(incidenciaActu)
-                                    Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
+
+                                        isEditable = false
+                                        enModoEdicion = false
+                                    },
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 10.dp,
+                                        pressedElevation = 15.dp,
+                                        disabledElevation = 0.dp
+                                    )
+                                ) {
+                                    Image(
+                                        modifier= Modifier.size(20.dp),
+                                        painter = painterResource(R.drawable.guardar_el_archivo),
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = "Guardar"
+                                    )
                                 }
+                                //Si no lo estamos, mostramos el de editar
 
-                                isEditable = false
-                                enModoEdicion = false
-                            },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            )
-                        ) {
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                painter = painterResource(R.drawable.guardar_el_archivo),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = "Guardar"
-                            )
-                        }
-                    //Si no lo estamos, mostramos el de editar
+                            }else{
+                                Button(
+                                    onClick = {
+                                        isEditable = true
+                                        enModoEdicion = true
+                                    },
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 10.dp,
+                                        pressedElevation = 15.dp,
+                                        disabledElevation = 0.dp
+                                    )
+                                ) {
+                                    Image(
+                                        modifier= Modifier.size(20.dp),
+                                        imageVector = Icons.Default.Edit,
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = "Editar"
+                                    )
+                                }
+                            }
+                            if(incidencia.idIncidencia!=0){
+                                Button(onClick = {
+                                    onEliminarPulsado(incidencia.idIncidencia)
+                                },
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 10.dp,
+                                        pressedElevation = 15.dp,
+                                        disabledElevation = 0.dp
+                                    ),
+                                    colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
+                                    modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
+                                ) {
+                                    Image(
+                                        modifier= Modifier.size(20.dp),
+                                        imageVector = Icons.Filled.Delete,
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = stringResource(R.string.eliminar)
+                                    )
+                                }
+                            }
+                        }else{
+                            if(login.rol.permisos.isNotEmpty() && login.rol.permisos.contains(permiso2)){
+                                if(idIncidencia==0) {
+                                    Button(
+                                        onClick = {
+                                            var incidenciaNueva: Incidencia
+                                            incidenciaHardware = IncidenciaHardware(
+                                                idh = 0,
+                                                modelo = modelo,
+                                                numSerie = numserie,
+                                                tipoHw = tipoHw
+                                            )
+                                            incidenciaSoftware = IncidenciaSoftware(
+                                                ids = 0,
+                                                software = software,
+                                                clave = clave,
+                                                SO = so
+                                            )
+                                            if (tipo == "HW") {
 
-                    }else{
-                        Button(
-                            onClick = {
-                                isEditable = true
-                                enModoEdicion = true
-                            },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            )
-                        ) {
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                imageVector = Icons.Default.Edit,
-                                contentScale = ContentScale.Crop,
-                                contentDescription = "Editar"
-                            )
-                        }
-                    }
-                    if(incidencia.idIncidencia!=0){
-                        Button(onClick = {
-                            onEliminarPulsado(incidencia.idIncidencia)
-                        },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            ),
-                            colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
-                            modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                imageVector = Icons.Filled.Delete,
-                                contentScale = ContentScale.Crop,
-                                contentDescription = "Eliminar"
-                            )
+                                                incidenciaNueva = Incidencia(
+                                                    idIncidencia = 0,
+                                                    tipo = tipo,
+                                                    fecha_incidencia = fechaIncidencia,
+                                                    fecha_introduccion = formatearFecha(
+                                                        getFechaActual()
+                                                    ),
+                                                    profesor = login,
+                                                    departamento = departamento,
+                                                    ubicacion = ubicacion,
+                                                    descripcion = descripcion,
+                                                    observaciones = observaciones,
+                                                    estado = estado,
+                                                    responsable = responsable,
+                                                    fecha_resolucion = fechaResolucion,
+                                                    tiempo_invertido = tiempoInvertido,
+                                                    mas_info = null,
+                                                    comentarios = emptyList(),
+                                                    incidenciaHardware = incidenciaHardware,
+                                                    incidenciaSoftware = null
+                                                )
+                                                if (incidenciaSoftware != null) {
+                                                    onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                                }
+                                            } else {
+                                                incidenciaNueva = Incidencia(
+                                                    idIncidencia = 0,
+                                                    tipo = tipo,
+                                                    fecha_incidencia = fechaIncidencia,
+                                                    fecha_introduccion = formatearFecha(
+                                                        getFechaActual()
+                                                    ),
+                                                    profesor = login,
+                                                    departamento = departamento,
+                                                    ubicacion = ubicacion,
+                                                    descripcion = descripcion,
+                                                    observaciones = observaciones,
+                                                    estado = estado,
+                                                    responsable = responsable,
+                                                    fecha_resolucion = fechaResolucion,
+                                                    tiempo_invertido = tiempoInvertido,
+                                                    mas_info = null,
+                                                    comentarios = emptyList(),
+                                                    incidenciaHardware = null,
+                                                    incidenciaSoftware = incidenciaSoftware
+                                                )
+                                                if (incidenciaHardware != null) {
+                                                    onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                                }
+                                            }
+                                            onInsertarPulsado(incidenciaNueva)
+                                            Toast.makeText(
+                                                contexto,
+                                                "Incidencia guardada correctamente",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        elevation = ButtonDefaults.buttonElevation(
+                                            defaultElevation = 10.dp,
+                                            pressedElevation = 15.dp,
+                                            disabledElevation = 0.dp
+                                        )
+                                    ) {
+                                        Image(
+                                            modifier = Modifier.size(20.dp),
+                                            painter = painterResource(R.drawable.guardar_el_archivo),
+                                            contentScale = ContentScale.Crop,
+                                            contentDescription = "Guardar"
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -370,6 +476,8 @@ fun PantallaIncidencia(
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .heightIn(max = 400.dp)
                         ) {
                             listaProfesores.forEach { profesor ->
                                 DropdownMenuItem(
@@ -396,7 +504,7 @@ fun PantallaIncidencia(
                             value = departamento?.nombreDpto?: "",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Departamento") },
+                            label = { Text("Departamento afectado") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded2) },
                             modifier = Modifier.menuAnchor()
                         )
@@ -404,7 +512,10 @@ fun PantallaIncidencia(
                         ExposedDropdownMenu(
                             expanded = expanded2,
                             onDismissRequest = { expanded2 = false },
+                            modifier = Modifier
+                                .heightIn(max = 400.dp)
                         ) {
+
                             listaDepartamentos.forEach { departamentos ->
                                 DropdownMenuItem(
                                     text = { Text(text = departamentos.nombreDpto) },
@@ -415,6 +526,7 @@ fun PantallaIncidencia(
                                     enabled = enModoEdicion
                                 )
                             }
+
                         }
                     }
                     ExposedDropdownMenuBox(
@@ -438,6 +550,8 @@ fun PantallaIncidencia(
                         ExposedDropdownMenu(
                             expanded = expanded3,
                             onDismissRequest = { expanded3 = false },
+                            modifier = Modifier
+                                .heightIn(max = 400.dp)
                         ) {
                             listaEstados.forEach { estados ->
                                 DropdownMenuItem(
@@ -445,40 +559,6 @@ fun PantallaIncidencia(
                                     onClick = {
                                         estado = estados
                                         expanded3 = false
-                                    },
-                                    enabled = enModoEdicion
-                                )
-                            }
-                        }
-                    }
-                    ExposedDropdownMenuBox(
-                        expanded = expanded5,
-                        onExpandedChange = {
-                            if(enModoEdicion){
-                                expanded5 = !expanded5
-                            }
-                        },
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                    ) {
-                        TextField(
-                            value = tipo,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Tipo de Incidencia") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded5) },
-                            modifier = Modifier.menuAnchor()
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded5,
-                            onDismissRequest = { expanded5 = false },
-                        ) {
-                            opcionesTipo.forEach { opcion ->
-                                DropdownMenuItem(
-                                    text = { Text(text = opcion) },
-                                    onClick = {
-                                        tipo = opcion
-                                        expanded5 = false
                                     },
                                     enabled = enModoEdicion
                                 )
@@ -529,6 +609,8 @@ fun PantallaIncidencia(
                         ExposedDropdownMenu(
                             expanded = expanded4,
                             onDismissRequest = { expanded4 = false },
+                            modifier = Modifier
+                                .heightIn(max = 400.dp)
                         ) {
                             listaUbicaciones.forEach { ubicaciones ->
                                 DropdownMenuItem(
@@ -536,6 +618,42 @@ fun PantallaIncidencia(
                                     onClick = {
                                         ubicacion = ubicaciones
                                         expanded4 = false
+                                    },
+                                    enabled = enModoEdicion
+                                )
+                            }
+                        }
+                    }
+                    ExposedDropdownMenuBox(
+                        expanded = expanded5,
+                        onExpandedChange = {
+                            if(enModoEdicion){
+                                expanded5 = !expanded5
+                            }
+                        },
+                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
+                    ) {
+                        TextField(
+                            value = tipo,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Tipo de Incidencia") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded5) },
+                            modifier = Modifier.menuAnchor()
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expanded5,
+                            onDismissRequest = { expanded5 = false },
+                            modifier = Modifier
+                                .heightIn(max = 400.dp)
+                        ) {
+                            opcionesTipo.forEach { opcion ->
+                                DropdownMenuItem(
+                                    text = { Text(text = opcion) },
+                                    onClick = {
+                                        tipo = opcion
+                                        expanded5 = false
                                     },
                                     enabled = enModoEdicion
                                 )
@@ -613,6 +731,8 @@ fun PantallaIncidencia(
                             ExposedDropdownMenu(
                                 expanded = expanded6,
                                 onDismissRequest = { expanded6 = false },
+                                modifier = Modifier
+                                    .heightIn(max = 400.dp)
                             ) {
                                 listaTiposHw.forEach { tiposHw ->
                                     DropdownMenuItem(
