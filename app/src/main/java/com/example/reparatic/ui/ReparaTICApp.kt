@@ -520,6 +520,7 @@ fun ReparaTICApp(
                         rolSeleccionado = viewModelRol.rolPulsado,
                         onActualizarRol = {
                             viewModelRol.actualizarRol(it.idRol, it)
+                            viewModelLogin.iniciarSesion(viewModelLogin.login.username, viewModelLogin.login.pwd)
                         }
                     )
                 }

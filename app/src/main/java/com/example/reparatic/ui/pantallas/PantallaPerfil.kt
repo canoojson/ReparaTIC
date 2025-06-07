@@ -251,7 +251,8 @@ fun PantallaProfesor(
                         }
                         Button(
                             onClick = {
-                                val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = encriptarMD5("-a123456"), dni = dni, username = username, email = email,
+                                pwd = "-a123456"
+                                val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = pwd, dni = dni, username = username, email = email,
                                     rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
                                 Toast.makeText(contexto, "La contraseña ha pasado a ser -a123456", Toast.LENGTH_LONG).show()
                                 onActualizarPulsado(profesorActu)

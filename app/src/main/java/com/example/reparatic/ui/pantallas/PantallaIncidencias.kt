@@ -56,7 +56,7 @@ fun PantallaIncidencias(
     onIncidenciaPulsada: (incidencia: Incidencia) -> Unit,
     modifier: Modifier = Modifier
 ){
-    val permiso: Permiso = Permiso(codPermiso = 7, descrip = "Ver todas las incidencias de todos los usuarios")
+    val permiso = Permiso(codPermiso = 7, descrip = "Ver todas las incidencias de todos los usuarios")
 
     LazyColumn(modifier = modifier) {
         items(lista){ incidencia ->
@@ -99,7 +99,7 @@ fun PantallaIncidencias(
                     }
                 }
             }else{
-                if(incidencia.profesor == login){
+                if(incidencia.profesor?.idProfesor == login.idProfesor){
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()

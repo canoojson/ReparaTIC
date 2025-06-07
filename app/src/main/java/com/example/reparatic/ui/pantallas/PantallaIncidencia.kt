@@ -566,7 +566,7 @@ fun PantallaIncidencia(
                         }
                     }
                 }
-                if((estado?.descrip?: "Solucionada")=="Resuelta"){
+                if((estado?.descrip?: "Solucionada")=="Solucionada"){
                     Row {
                         TextField(
                             value = formatearFecha(getFechaActual()),
@@ -675,7 +675,7 @@ fun PantallaIncidencia(
                             )
                         }
                     }
-                    if(estado?.descrip=="Resuelta") {
+                    if(estado?.descrip=="Solucionada") {
                         TextField(
                             value = tiempoInvertido ?: "00:00:00",
                             onValueChange = {},

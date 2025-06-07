@@ -88,7 +88,7 @@ class RolViewModel(private val rolRepositorio: RolRepositorio) : ViewModel() {
         }
     }
 
-    fun actualizarRol(id: Int, rol: Rol) {
+    suspend fun actualizarRol(id: Int, rol: Rol) {
         viewModelScope.launch {
             rolUIState = RolUIState.Cargando
             rolUIState = try {
