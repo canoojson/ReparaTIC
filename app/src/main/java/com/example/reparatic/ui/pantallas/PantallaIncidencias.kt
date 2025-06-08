@@ -84,7 +84,10 @@ fun PantallaIncidencias(
                                     color = Color.Gray,
                                     fontSize = 14.sp)
                             }
-                            Text(text = incidencia.profesor!!.nombre + " " + incidencia.profesor.apellidos)
+                            Text(text = ((incidencia.profesor?.nombre
+                                ?: "Profesor eliminado") + " " + (incidencia.profesor?.apellidos
+                                    ?: "o no disponible"))
+                            )
                             Text(text= incidencia.fecha_incidencia.toString())
                         }
                         Column(horizontalAlignment = Alignment.End,
@@ -99,7 +102,7 @@ fun PantallaIncidencias(
                     }
                 }
             }else{
-                if(incidencia.profesor?.idProfesor == login.idProfesor){
+                if(incidencia.profesor?.idProfesor == login.idProfesor || incidencia.responsable?.idProfesor == login.idProfesor){
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -123,8 +126,8 @@ fun PantallaIncidencias(
                                         color = Color.Gray,
                                         fontSize = 14.sp)
                                 }
-                                Text(text = incidencia.profesor!!.nombre + " " + incidencia.profesor.apellidos)
-                                Text(text= incidencia.fecha_incidencia.toString())
+                                Text(text = (incidencia.profesor?.nombre ?:"Profesor eliminado") + " " + (incidencia.profesor?.apellidos ?: "o no disponible"))
+                                Text(text = incidencia.fecha_incidencia.toString())
                             }
                             Column(horizontalAlignment = Alignment.End,
                                 verticalArrangement = Arrangement.Center,

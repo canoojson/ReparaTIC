@@ -34,16 +34,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.reparatic.R
+import com.example.reparatic.modelo.Permiso
+import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.modelo.Ubicacion
 
 @Composable
 fun PantallaUbicacion(
     ubicacion: Ubicacion,
+    login : Profesor,
     onUbicacionInsertada : (Ubicacion) -> Unit,
     onUbicacionActualizada: (Ubicacion) -> Unit,
     onUbicacionEliminada:(id: Int) -> Unit
 ){
 
+    val permiso = Permiso(codPermiso = 11, descrip = "Modificar/Eliminar ubicaciones")
     var idUbicacion by remember { mutableStateOf(ubicacion.idUbicacion) }
     var nombre by remember { mutableStateOf(ubicacion.nombre) }
     var detalles by remember { mutableStateOf(ubicacion.descrip) }
@@ -73,72 +77,74 @@ fun PantallaUbicacion(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Row( ) {
-                    Button(
-                        onClick = {
-                            if(enModoEdicion){
-                                if(ubicacion.idUbicacion == 0){
-                                    onUbicacionInsertada(Ubicacion(idUbicacion=0, nombre = nombre, descrip = detalles))
-                                    Toast.makeText(
-                                        contexto,
-                                        "Ubicación insertada correctamente",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }else {
-                                    ubicacionActualizada = Ubicacion(
-                                        idUbicacion = ubicacion.idUbicacion,
-                                        nombre = nombre,
-                                        descrip = detalles
-                                    )
-                                    onUbicacionActualizada(ubicacionActualizada)
-                                    Toast.makeText(
-                                        contexto,
-                                        "Cambios guardados correctamente",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                    if(login.rol?.permisos?.contains(permiso) == true){
+                        Button(
+                            onClick = {
+                                if(enModoEdicion){
+                                    if(ubicacion.idUbicacion == 0){
+                                        onUbicacionInsertada(Ubicacion(idUbicacion=0, nombre = nombre, descrip = detalles))
+                                        Toast.makeText(
+                                            contexto,
+                                            "Ubicación insertada correctamente",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }else{
+                                        ubicacionActualizada = Ubicacion(
+                                            idUbicacion = ubicacion.idUbicacion,
+                                            nombre = nombre,
+                                            descrip = detalles
+                                        )
+                                        onUbicacionActualizada(ubicacionActualizada)
+                                        Toast.makeText(
+                                            contexto,
+                                            "Cambios guardados correctamente",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }else{
+                                    isEditable = true
+                                    enModoEdicion = true
                                 }
+                            },
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 10.dp,
+                                pressedElevation = 15.dp,
+                                disabledElevation = 0.dp
+                            )
+                        ) {
+                            if(enModoEdicion){
+                                Image(
+                                    modifier= Modifier.size(20.dp),
+                                    painter = painterResource(R.drawable.guardar_el_archivo),
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = "Guardar"
+                                )
                             }else{
-                                isEditable = true
-                                enModoEdicion = true
+                                Image(
+                                    modifier= Modifier.size(20.dp),
+                                    imageVector = Icons.Filled.Create,
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = "Editar"
+                                )
                             }
-                        },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        )
-                    ) {
-                        if(enModoEdicion){
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                painter = painterResource(R.drawable.guardar_el_archivo),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = "Guardar"
-                            )
-                        }else{
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                imageVector = Icons.Filled.Create,
-                                contentScale = ContentScale.Crop,
-                                contentDescription = "Editar"
-                            )
+
                         }
 
-                    }
-
-                    Button(onClick = {
-                        onUbicacionEliminada(ubicacion.idUbicacion)
-                        ubicacionActualizada = Ubicacion(idUbicacion= 0, nombre = "", descrip = "")
-                        Toast.makeText(contexto, "Ubicación eliminada correctamente", Toast.LENGTH_SHORT).show()
-                    },
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 10.dp,
-                            pressedElevation = 15.dp,
-                            disabledElevation = 0.dp
-                        ),
-                        colors = ButtonDefaults.buttonColors(Color.Red, Color.Black, Color.Red, Color.Black),
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                    ) {
-                        Text(text = stringResource(R.string.eliminar))
+                        Button(onClick = {
+                            onUbicacionEliminada(ubicacion.idUbicacion)
+                            ubicacionActualizada = Ubicacion(idUbicacion= 0, nombre = "", descrip = "")
+                            Toast.makeText(contexto, "Ubicación eliminada correctamente", Toast.LENGTH_SHORT).show()
+                        },
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 10.dp,
+                                pressedElevation = 15.dp,
+                                disabledElevation = 0.dp
+                            ),
+                            colors = ButtonDefaults.buttonColors(Color.Red, Color.Black, Color.Red, Color.Black),
+                            modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
+                        ) {
+                            Text(text = stringResource(R.string.eliminar))
+                        }
                     }
                 }
                 Row {

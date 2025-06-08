@@ -18,7 +18,7 @@ import retrofit2.Response
 import java.io.IOException
 
 sealed interface ProfesorUIState {
-    data class ObtenerExito(val profesores:List<Profesor>) : ProfesorUIState
+    data class ObtenerExito(val profesores:List<Profesor>, val profesoresInformatica: List<Profesor>) : ProfesorUIState
     data class CrearExito(val profesor: Profesor) : ProfesorUIState
     data class ActualizarExito(val profesor: Response<Profesor>) : ProfesorUIState
     data class EliminarExito(val id: Int) : ProfesorUIState
@@ -37,6 +37,9 @@ class ProfesorViewModel(private val profesorRepositorio: ProfesorRepositorio): V
         profesorPulsado = profesor
     }
 
+    var listaProfesores: List<Profesor> by mutableStateOf(listOf())
+    var listaProfesoresDepto: List<Profesor> by mutableStateOf(listOf())
+
     init {
         obtenerProfesores()
     }
@@ -45,8 +48,8 @@ class ProfesorViewModel(private val profesorRepositorio: ProfesorRepositorio): V
         viewModelScope.launch {
             profesorUIState = ProfesorUIState.Cargando
             profesorUIState = try {
-                val listaProfesores = profesorRepositorio.obtenerProfesores()
-                ProfesorUIState.ObtenerExito(listaProfesores)
+                 listaProfesores = profesorRepositorio.obtenerProfesores()
+                ProfesorUIState.ObtenerExito(listaProfesores, listaProfesoresDepto)
             } catch (e: IOException) {
                 ProfesorUIState.Error
             } catch (e: HttpException) {
@@ -59,8 +62,8 @@ class ProfesorViewModel(private val profesorRepositorio: ProfesorRepositorio): V
         viewModelScope.launch {
             profesorUIState = ProfesorUIState.Cargando
             profesorUIState = try {
-                val listaProfesoresDepto = profesorRepositorio.obtenerProfesoresDepartamento(nombre)
-                ProfesorUIState.ObtenerExito(listaProfesoresDepto)
+                listaProfesoresDepto = profesorRepositorio.obtenerProfesoresDepartamento(nombre)
+                ProfesorUIState.ObtenerExito(listaProfesores, listaProfesoresDepto)
             }catch (e: IOException) {
                 ProfesorUIState.Error
             } catch (e: HttpException) {

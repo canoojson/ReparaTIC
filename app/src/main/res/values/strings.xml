@@ -21,4 +21,7 @@
     <string name="nuevo_profesor">Nuevo profesor</string>
     <string name="nuevorol">Nuevo rol</string>
     <string name="eliminar">Eliminar</string>
+    <string name="tipos_hw">Tipos Hardware</string>
+    <string name="tipo_hw">Tipo de hardware</string>
+    <string name="nuevo_tipo_hw">Nuevo tipo de hardware</string>
 </resources>

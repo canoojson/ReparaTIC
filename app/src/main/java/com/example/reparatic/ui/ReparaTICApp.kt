@@ -1,15 +1,12 @@
 package com.example.reparatic.ui
 
-import android.app.Application
-import android.content.res.Configuration
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Face
@@ -39,7 +37,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -52,9 +49,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.UiMode
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -62,13 +57,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.example.reparatic.R
 import com.example.reparatic.datos.DrawerMenu
 import com.example.reparatic.modelo.Departamento
 import com.example.reparatic.modelo.Incidencia
+import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.modelo.Rol
+import com.example.reparatic.modelo.TiposHw
 import com.example.reparatic.modelo.Ubicacion
 import com.example.reparatic.ui.ViewModels.DepartamentoViewModel
 import com.example.reparatic.ui.ViewModels.EstadoViewModel
@@ -86,12 +82,13 @@ import com.example.reparatic.ui.pantallas.PantallaInicioDepartamentos
 import com.example.reparatic.ui.pantallas.PantallaInicioIncidencias
 import com.example.reparatic.ui.pantallas.PantallaInicioProfesores
 import com.example.reparatic.ui.pantallas.PantallaInicioRoles
+import com.example.reparatic.ui.pantallas.PantallaInicioTiposHw
 import com.example.reparatic.ui.pantallas.PantallaInicioUbicaciones
 import com.example.reparatic.ui.pantallas.PantallaLogin
 import com.example.reparatic.ui.pantallas.PantallaProfesor
 import com.example.reparatic.ui.pantallas.PantallaUbicacion
 import com.example.reparatic.ui.pantallas.RolDialog
-import com.example.reparatic.ui.pantallas.getFechaActual
+import com.example.reparatic.ui.pantallas.TipoHwDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -111,6 +108,9 @@ enum class Pantallas(@StringRes val titulo: Int) {
     Profesores(titulo = R.string.profesores),
         Profesor(titulo = R.string.profesor),
         NuevoProfesor(titulo = R.string.nuevo_profesor),
+    TiposHw(titulo = R.string.tipos_hw),
+        TipoHw(titulo = R.string.tipo_hw),
+        NuevoTipoHw(titulo = R.string.nuevo_tipo_hw),
     GestionPermisos(titulo = R.string.gestion_permisos),
         NuevoRol(titulo = R.string.nuevorol)
 }
@@ -121,6 +121,7 @@ val menu = arrayOf(
     DrawerMenu(Icons.Filled.Place,Pantallas.Ubicaciones.titulo, Pantallas.Ubicaciones.name),
     DrawerMenu(Icons.Filled.Create,Pantallas.Departamentos.titulo, Pantallas.Departamentos.name),
     DrawerMenu(Icons.Filled.Face,Pantallas.Profesores.titulo, Pantallas.Profesores.name),
+    DrawerMenu(Icons.Filled.Build,Pantallas.TiposHw.titulo, Pantallas.TiposHw.name),
     DrawerMenu(Icons.Filled.Lock,Pantallas.GestionPermisos.titulo, Pantallas.GestionPermisos.name)
 )
 
@@ -185,34 +186,99 @@ fun ReparaTICApp(
                 )
             },
             floatingActionButton = {
-                if(pantallaActual == Pantallas.Incidencias){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.IncidenciaNueva.name) }) {
+                if(pantallaActual == Pantallas.Incidencias && viewModelLogin.login.rol?.permisos?.contains(
+                        Permiso(codPermiso = 1, descrip = "Añadir incidencias")
+                    ) == true
+                        ){
+                    FloatingActionButton(onClick = {
+                        if(viewModelLogin.login.rol?.permisos?.contains(
+                                Permiso(codPermiso = 1, descrip = "Añadir incidencias")
+                            ) == true){
+                            navController.navigate(route = Pantallas.IncidenciaNueva.name)
+                        }else{
+                            Toast.makeText(navController.context, "No tienes permisos para realizar esta accion", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
 
-                if(pantallaActual == Pantallas.Ubicaciones){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevaUbicacion.name) }) {
+                if(pantallaActual == Pantallas.Ubicaciones&& viewModelLogin.login.rol?.permisos?.contains(
+                        Permiso(codPermiso = 14, descrip = "Añadir ubicaciones")
+                    ) == true){
+                    FloatingActionButton(onClick = {
+                        if(viewModelLogin.login.rol?.permisos?.contains(
+                                Permiso(codPermiso = 14, descrip = "Añadir ubicaciones")
+                            ) == true){
+                            navController.navigate(route = Pantallas.NuevaUbicacion.name)
+                        }else{
+                            Toast.makeText(navController.context, "No tienes permisos para realizar esta accion", Toast.LENGTH_SHORT).show()
+                        }
+                         }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
 
-                if(pantallaActual == Pantallas.Profesores){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevoProfesor.name) }) {
+                if(pantallaActual == Pantallas.Profesores&& viewModelLogin.login.rol?.permisos?.contains(
+                        Permiso(codPermiso = 15, descrip = "Añadir profesores")
+                    ) == true){
+                    FloatingActionButton(onClick = {
+                        if(viewModelLogin.login.rol?.permisos?.contains(
+                                Permiso(codPermiso = 15, descrip = "Añadir profesores")
+                            ) == true){
+                            navController.navigate(route = Pantallas.NuevoProfesor.name)
+                        }else{
+                            Toast.makeText(navController.context, "No tienes permisos para realizar esta accion", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
-                if(pantallaActual == Pantallas.Departamentos){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevoDepartamento.name) }) {
+                if(pantallaActual == Pantallas.Departamentos&& viewModelLogin.login.rol?.permisos?.contains(
+                        Permiso(codPermiso = 13, descrip = "Añadir departamentos")
+                    ) == true){
+                    FloatingActionButton(onClick = {
+                        if(viewModelLogin.login.rol?.permisos?.contains(
+                                Permiso(codPermiso = 13, descrip = "Añadir departamentos")
+                            ) == true){
+                            navController.navigate(route = Pantallas.NuevoDepartamento.name)
+                        }else{
+                            Toast.makeText(navController.context, "No tienes permisos para realizar esta accion", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
 
-                if(pantallaActual == Pantallas.GestionPermisos){
-                    FloatingActionButton(onClick = { navController.navigate(route = Pantallas.NuevoRol.name) }) {
+                if(pantallaActual == Pantallas.GestionPermisos&& viewModelLogin.login.rol?.permisos?.contains(
+                        Permiso(codPermiso = 4, descrip = "Alta / baja / modificación de roles y permisos")
+                    ) == true){
+                    FloatingActionButton(onClick = {
+                        if(viewModelLogin.login.rol?.permisos?.contains(
+                                Permiso(codPermiso = 4, descrip = "Alta / baja / modificación de roles y permisos")
+                            ) == true){
+                            navController.navigate(route = Pantallas.NuevoRol.name)
+                        }else{
+                            Toast.makeText(navController.context, "No tienes permisos para realizar esta accion", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
                     }
                 }
+                if(pantallaActual == Pantallas.TiposHw &&
+                    viewModelLogin.login.rol?.permisos?.contains(Permiso(codPermiso = 3, descrip = "Añadir, borrar o modificar tipos de Hw"))==true){
+                    FloatingActionButton(onClick = {
+                        if(viewModelLogin.login.rol?.permisos?.contains(
+                                Permiso(codPermiso = 3, descrip = "Añadir, borrar o modificar tipos de Hw")
+                            ) == true){
+                            navController.navigate(route = Pantallas.NuevoTipoHw.name)
+                        }else{
+                            Toast.makeText(navController.context, "No tienes permisos para realizar esta accion", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Nuevo")
+                    }
+                    }
             }
         ) {
             innerPadding ->
@@ -225,6 +291,7 @@ fun ReparaTICApp(
             val uiStateUbicacion by rememberUpdatedState(viewModelUbicacion.ubicacionUIState)
             val uiStateTiposHw by rememberUpdatedState(viewModelTiposHw.tiposHwUIState)
             val uiStateRol by rememberUpdatedState(viewModelRol.rolUIState)
+            val uiStateTipoHw by rememberUpdatedState(viewModelTiposHw.tiposHwUIState)
 
             NavHost(
                 navController = navController,
@@ -281,18 +348,10 @@ fun ReparaTICApp(
                             viewModelIncidecia.eliminarIncidencia(it)
                             navController.navigate(route = Pantallas.Incidencias.name)
                         },
-                        onUbicacionActualizada = {
-                            viewModelUbicacion.actualizarUbicacion(it.idUbicacion, it)
-                        },
-                        onUbicacionEliminada = {
-                            viewModelUbicacion.eliminarUbicacion(it)
-                        },
                         onIncidenciaHardwareEliminada = {
-                            Log.v("Cguuigfeihsjgfi", "onIncidenciaSoftwareEliminada")
                             viewModelIncidenciaHardware.eliminarIncidenciaHardware(it.idh)
                         },
                         onIncidenciaSoftwareEliminada = {
-                            Log.v("Cguuigfeihsjgfi", "onIncidenciaSoftwareEliminada")
                             viewModelIncidenciaSoftware.eliminar(it.ids)
                         }
                     )
@@ -327,12 +386,6 @@ fun ReparaTICApp(
                             viewModelIncidecia.eliminarIncidencia(it)
                             navController.navigate(route = Pantallas.Incidencias.name)
                         },
-                        onUbicacionActualizada = {
-                            viewModelUbicacion.actualizarUbicacion(it.idUbicacion, it)
-                        },
-                        onUbicacionEliminada = {
-                            viewModelUbicacion.eliminarUbicacion(it)
-                        },
                         onIncidenciaHardwareEliminada = {
                             viewModelIncidenciaHardware.eliminarIncidenciaHardware(it.idh)
                         },
@@ -356,8 +409,8 @@ fun ReparaTICApp(
                             viewModelProfesor.actualizarProfesor(it.idProfesor, it)
                         },
                         onEliminarPulsado = {
-                            viewModelProfesor.eliminarProfesor(it.idProfesor)
                             onCerrarSesion()
+                            viewModelProfesor.eliminarProfesor(it.idProfesor)
                             navController.navigate(route = Pantallas.Login.name)
                         }
 
@@ -376,6 +429,7 @@ fun ReparaTICApp(
                 composable(route= Pantallas.Ubicacion.name) {
                     PantallaUbicacion(
                         ubicacion = viewModelUbicacion.ubicacionPulsada,
+                        login = viewModelLogin.login,
                         onUbicacionInsertada = {
                             viewModelUbicacion.insertarUbicacion(it)
                             navController.navigate(route = Pantallas.Ubicaciones.name)
@@ -392,6 +446,7 @@ fun ReparaTICApp(
                 composable(route= Pantallas.NuevaUbicacion.name) {
                     PantallaUbicacion(
                         ubicacion = Ubicacion(idUbicacion = 0, nombre = "", descrip = ""),
+                        login = viewModelLogin.login,
                         onUbicacionInsertada = {
                             viewModelUbicacion.insertarUbicacion(it)
                             navController.navigate(route = Pantallas.Ubicaciones.name)
@@ -432,6 +487,7 @@ fun ReparaTICApp(
                             viewModelDepartamento.insertarDepartamento(it)
                             navController.navigate(route = Pantallas.Departamentos.name)
                         },
+                        login = viewModelLogin.login,
                         departamento = viewModelDepartamento.departamentoPulsado
                     )
                 }
@@ -450,7 +506,58 @@ fun ReparaTICApp(
                             viewModelDepartamento.insertarDepartamento(it)
                             navController.navigate(route = Pantallas.Departamentos.name)
                         },
+                        login = viewModelLogin.login,
                         departamento = Departamento(codDpto = 0, nombreDpto = "")
+                    )
+                }
+                composable(route= Pantallas.TiposHw.name) {
+                    PantallaInicioTiposHw(
+                        appUIState = uiStateTipoHw ,
+                        onTiposHwObtenidos = {
+                            viewModelTiposHw.obtenerTiposHw()
+                        },
+                        onTipoHwPulsado = {
+                            viewModelTiposHw.actualizarTiposHwPulsado(it)
+                            navController.navigate(route = Pantallas.TipoHw.name)
+                        }
+                    )
+                }
+                composable(route= Pantallas.TipoHw.name) {
+                    TipoHwDialog(
+                        onDismiss = { navController.navigate(route = Pantallas.TiposHw.name) },
+                        onActualizarPulsado = {
+                            viewModelTiposHw.actualizarTiposHw(it.idTipoHw, it)
+                            navController.navigate(route = Pantallas.TiposHw.name)
+                        },
+                        onEliminarPulsado = {
+                            viewModelTiposHw.eliminarTiposHw(it.idTipoHw)
+                            navController.navigate(route = Pantallas.TiposHw.name)
+                        },
+                        onInsertarPulsado = {
+                            viewModelTiposHw.insertarTiposHw(it)
+                            navController.navigate(route = Pantallas.TiposHw.name)
+                        },
+                        login = viewModelLogin.login,
+                        tipoHw = viewModelTiposHw.tiposHwPulsado
+                    )
+                }
+                composable(route= Pantallas.NuevoTipoHw.name) {
+                    TipoHwDialog(
+                        onDismiss = { navController.navigate(route = Pantallas.TiposHw.name) },
+                        onActualizarPulsado = {
+                            viewModelTiposHw.actualizarTiposHw(it.idTipoHw, it)
+                            navController.navigate(route = Pantallas.TiposHw.name)
+                        },
+                        onEliminarPulsado = {
+                            viewModelTiposHw.eliminarTiposHw(it.idTipoHw)
+                            navController.navigate(route = Pantallas.TiposHw.name)
+                        },
+                        onInsertarPulsado = {
+                            viewModelTiposHw.insertarTiposHw(it)
+                            navController.navigate(route = Pantallas.TiposHw.name)
+                        },
+                        login = viewModelLogin.login,
+                        tipoHw = TiposHw(idTipoHw = 0, descrip = "")
                     )
                 }
                 composable(route= Pantallas.Profesores.name) {
@@ -461,7 +568,11 @@ fun ReparaTICApp(
                         },
                         onProfesorPulsado = {
                             viewModelProfesor.actualizarProfesorPulsado(it)
-                            navController.navigate(route = Pantallas.Profesor.name)
+                            if(it.idProfesor == viewModelLogin.login.idProfesor){
+                                navController.navigate(route = Pantallas.Perfil.name)
+                            }else{
+                                navController.navigate(route = Pantallas.Profesor.name)
+                            }
                         }
                     )
                 }
@@ -519,8 +630,10 @@ fun ReparaTICApp(
                         },
                         rolSeleccionado = viewModelRol.rolPulsado,
                         onActualizarRol = {
-                            viewModelRol.actualizarRol(it.idRol, it)
-                            viewModelLogin.iniciarSesion(viewModelLogin.login.username, viewModelLogin.login.pwd)
+                            coroutineScope.launch {
+                                viewModelRol.actualizarRol(it.idRol, it)
+                                viewModelLogin.iniciarSesion(viewModelLogin.login.username, viewModelLogin.login.pwd)
+                            }
                         }
                     )
                 }
@@ -579,18 +692,35 @@ private fun DrawerContent(
         Spacer(modifier = Modifier.size(50.dp))
 
         menu.forEach {
-            NavigationDrawerItem(
-                label = {
-                    Text(text = stringResource(id = it.titulo))
-                },
-                icon = {
-                    Icon(imageVector = it.icono, contentDescription = null)
-                },
-                selected = it.titulo == pantallaActual.titulo,
-                onClick = {
-                    onMenuClick(it.ruta)
+            if (it.ruta == Pantallas.GestionPermisos.name){
+                if(login.rol?.permisos?.contains(Permiso(codPermiso = 4, descrip = "Alta / baja / modificación de roles y permisos"))== true){
+                    NavigationDrawerItem(
+                        label = {
+                            Text(text = stringResource(id = it.titulo))
+                        },
+                        icon = {
+                            Icon(imageVector = it.icono, contentDescription = null)
+                        },
+                        selected = it.titulo == pantallaActual.titulo,
+                        onClick = {
+                            onMenuClick(it.ruta)
+                        }
+                    )
                 }
-            )
+            }else{
+                NavigationDrawerItem(
+                    label = {
+                        Text(text = stringResource(id = it.titulo))
+                    },
+                    icon = {
+                        Icon(imageVector = it.icono, contentDescription = null)
+                    },
+                    selected = it.titulo == pantallaActual.titulo,
+                    onClick = {
+                        onMenuClick(it.ruta)
+                    }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(48.dp))

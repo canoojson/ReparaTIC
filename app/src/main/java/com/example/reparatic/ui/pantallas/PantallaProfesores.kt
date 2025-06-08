@@ -65,7 +65,8 @@ fun PantallaProfesores(
                     verticalAlignment = Alignment.CenterVertically){
                     Image(
                         imageVector = Icons.Filled.Face,
-                        contentDescription = "Foto de perfil"
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.padding(end = 16.dp)
                     )
                     Text(text = profesor.nombre + " " + profesor.apellidos)
                 }

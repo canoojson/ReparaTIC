@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.reparatic.ReparaTICAplicacion
+import com.example.reparatic.datos.LoginRepositorio
 import com.example.reparatic.datos.RolRepositorio
 import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Rol
@@ -89,17 +90,15 @@ class RolViewModel(private val rolRepositorio: RolRepositorio) : ViewModel() {
     }
 
     suspend fun actualizarRol(id: Int, rol: Rol) {
-        viewModelScope.launch {
-            rolUIState = RolUIState.Cargando
-            rolUIState = try {
-                val rolActualizado = rolRepositorio.actualizarRol(id, rol)
-                rolPulsado = rol
-                RolUIState.ActualizarExito(rolActualizado)
-            } catch (e: IOException) {
-                RolUIState.Error
-            } catch (e: HttpException) {
-                RolUIState.Error
-            }
+        rolUIState = RolUIState.Cargando
+        rolUIState = try {
+            val rolActualizado = rolRepositorio.actualizarRol(id, rol)
+            rolPulsado = rol
+            RolUIState.ActualizarExito(rolActualizado)
+        } catch (e: IOException) {
+            RolUIState.Error
+        } catch (e: HttpException) {
+            RolUIState.Error
         }
     }
 

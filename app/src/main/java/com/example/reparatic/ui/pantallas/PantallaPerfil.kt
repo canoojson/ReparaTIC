@@ -1,6 +1,7 @@
 package com.example.reparatic.ui.pantallas
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -26,6 +28,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -42,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -78,10 +82,13 @@ fun PantallaProfesor(
         }
     }
     val permiso = Permiso(codPermiso = 8, descrip = "Borrar administradores")
+    val permiso2 = Permiso(codPermiso = 9, descrip = "Cambiar contraseña de los profesores")
+    val permiso3 = Permiso(codPermiso = 10, descrip = "Modificar/Eliminar profesores")
     var mostrarDialogContraseña by remember { mutableStateOf(false) }
     val contexto = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     var expanded2 by remember { mutableStateOf(false) }
+
 
         //Variables Perfil
     var perfil by remember { mutableStateOf(profesor) }
@@ -94,6 +101,10 @@ fun PantallaProfesor(
     var rol by remember { mutableStateOf(profesor.rol) }
     var username by remember { mutableStateOf(profesor.username) }
     var dni by remember { mutableStateOf(profesor.dni) }
+
+    var error by remember { mutableStateOf(false) }
+    var errorEmail by remember { mutableStateOf(false) }
+    var errorDni by remember { mutableStateOf(false) }
 
     var listaDepartamentos = emptyList<Departamento>()
     var listaRoles = emptyList<Rol>()
@@ -173,44 +184,83 @@ fun PantallaProfesor(
             }
             Column {
                 Row {
-                        Button(
-                            onClick = {
-                                if(idProfesor==0){
-                                    val profesorNuevo = Profesor(idProfesor = 0, pwd = pwd, dni = dni, username = username, email = email,
-                                        rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
-                                    onInsertarPulsado(profesorNuevo)
-
+                        if(login.rol?.permisos?.contains(permiso3) == true || login.idProfesor == profesor.idProfesor){
+                            Button(
+                                onClick = {
+                                    errorDni = !esDniValido(dni)
+                                    errorEmail = !esEmailValido(email)
+                                    error = false
+                                    if(modoEdicion){
+                                        if(idProfesor==0){
+                                            if(dni=="" || errorDni || nombre=="" || email=="" || errorEmail || departamento==null || rol==null || username==""){
+                                                error = true
+                                            }else{
+                                                val profesorNuevo = Profesor(idProfesor = 0, pwd = "-a123456", dni = dni, username = username, email = email,
+                                                    rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
+                                                modoEdicion = !modoEdicion
+                                                onInsertarPulsado(profesorNuevo)
+                                            }
+                                        }else{
+                                            if(dni=="" || errorDni || nombre=="" ||  email=="" || errorEmail || departamento==null || rol==null || username==""){
+                                                error = true
+                                            }else{
+                                                val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = pwd, dni = dni, username = username, email = email,
+                                                    rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
+                                                modoEdicion = !modoEdicion
+                                                onActualizarPulsado(profesorActu)
+                                            }
+                                        }
+                                    }else{
+                                        modoEdicion = !modoEdicion
+                                    }
+                                },
+                                elevation = ButtonDefaults.buttonElevation(
+                                    defaultElevation = 10.dp,
+                                    pressedElevation = 15.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                            ) {
+                                if(modoEdicion){
+                                    Image(
+                                        modifier= Modifier.size(20.dp),
+                                        painter = painterResource(R.drawable.guardar_el_archivo),
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = "Guardar"
+                                    )
                                 }else{
-                                    val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = pwd, dni = dni, username = username, email = email,
-                                        rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
-                                    onActualizarPulsado(profesorActu)
+                                    Image(
+                                        modifier= Modifier.size(20.dp),
+                                        imageVector = Icons.Filled.Edit,
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = "Editar")
                                 }
-                                modoEdicion = !modoEdicion
-                            },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            ),
-                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
-                        ) {
-                            if(modoEdicion){
-                                Image(
-                                    modifier= Modifier.size(20.dp),
-                                    painter = painterResource(R.drawable.guardar_el_archivo),
-                                    contentScale = ContentScale.Crop,
-                                    contentDescription = "Guardar"
-                                )
-                            }else{
-                                Image(
-                                    modifier= Modifier.size(20.dp),
-                                    imageVector = Icons.Filled.Edit,
-                                    contentScale = ContentScale.Crop,
-                                    contentDescription = "Editar")
                             }
                         }
                         //Si no lo estamos, mostramos el de editar
-                    if(login.rol?.permisos?.contains(permiso)?: false && login.idProfesor!=profesor.idProfesor){
+                    if((profesor.rol?.descrip ?: "") == "Administrador" && profesor.idProfesor!=0){
+                        if(login.rol?.permisos?.contains(permiso) == true && profesor.idProfesor != login.idProfesor){
+                            Button(
+                                onClick = {
+                                    onEliminarPulsado(perfil)
+                                },
+                                elevation = ButtonDefaults.buttonElevation(
+                                    defaultElevation = 10.dp,
+                                    pressedElevation = 15.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
+                                modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                            ) {
+                                Image(
+                                    modifier= Modifier.size(20.dp),
+                                    imageVector = Icons.Filled.Delete,
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = stringResource(R.string.eliminar)
+                                )
+                            }
+                        }
+                    }else{
                         Button(
                             onClick = {
                                 onEliminarPulsado(perfil)
@@ -232,39 +282,41 @@ fun PantallaProfesor(
                         }
                     }
                     if(profesor.idProfesor!=0){
-                        Button(
-                            onClick = {
-                                mostrarDialogContraseña = !mostrarDialogContraseña
-                            },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            ),
-                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
-                        ) {
-                            if(pwd == ""){
-                                Text(text = "Establecer contraseña")
-                            }else{
-                                Text(text = "Cambiar contraseña")
+                        if(login.idProfesor == profesor.idProfesor || login.rol?.permisos?.contains(permiso2) == true){
+                            Button(
+                                onClick = {
+                                    mostrarDialogContraseña = !mostrarDialogContraseña
+                                },
+                                elevation = ButtonDefaults.buttonElevation(
+                                    defaultElevation = 10.dp,
+                                    pressedElevation = 15.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                            ) {
+                                if(pwd == ""){
+                                    Text(text = "Establecer contraseña")
+                                }else{
+                                    Text(text = "Cambiar contraseña")
+                                }
                             }
-                        }
-                        Button(
-                            onClick = {
-                                pwd = "-a123456"
-                                val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = pwd, dni = dni, username = username, email = email,
-                                    rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
-                                Toast.makeText(contexto, "La contraseña ha pasado a ser -a123456", Toast.LENGTH_LONG).show()
-                                onActualizarPulsado(profesorActu)
-                            },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            ),
-                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
-                        ) {
-                            Text("Resetear contraseña")
+                            Button(
+                                onClick = {
+                                    pwd = "-a123456"
+                                    val profesorActu = Profesor(idProfesor = perfil.idProfesor, pwd = pwd, dni = dni, username = username, email = email,
+                                        rol = rol, departamento = departamento, apellidos = apellidos, nombre = nombre)
+                                    Toast.makeText(contexto, "La contraseña ha pasado a ser -a123456", Toast.LENGTH_LONG).show()
+                                    onActualizarPulsado(profesorActu)
+                                },
+                                elevation = ButtonDefaults.buttonElevation(
+                                    defaultElevation = 10.dp,
+                                    pressedElevation = 15.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                            ) {
+                                Text("Resetear contraseña")
+                            }
                         }
                     }
                 }
@@ -273,6 +325,14 @@ fun PantallaProfesor(
                         value = nombre,
                         onValueChange = { nombre = it },
                         label = { Text("Nombre") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next
+                        ),
+                        isError = if(error&&nombre == "") true else false,
+                        supportingText = {
+                            if (error && nombre == "") Text("Rellena este campo", color = MaterialTheme.colorScheme.error)
+                        },
                         readOnly = !modoEdicion,
                         modifier = Modifier
                             .width(180.dp)
@@ -281,6 +341,10 @@ fun PantallaProfesor(
                     TextField(
                         value = apellidos,
                         onValueChange = { apellidos = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next
+                        ),
                         label = { Text("Apellidos") },
                         readOnly = !modoEdicion,
                         modifier = Modifier
@@ -290,6 +354,15 @@ fun PantallaProfesor(
                     TextField(
                         value = email,
                         onValueChange = { email = it },
+                        singleLine = true,
+                        isError = errorEmail,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Email
+                        ),
+                        supportingText = {
+                            if (errorEmail) Text("Email no válido", color = MaterialTheme.colorScheme.error)
+                        },
                         label = { Text("Email") },
                         readOnly = !modoEdicion,
                         modifier = Modifier
@@ -300,92 +373,124 @@ fun PantallaProfesor(
                 Row {
                     TextField(
                         value = dni,
-                        onValueChange = { dni = it },
+                        onValueChange = { dni = it.uppercase() },
+                        singleLine = true,
+                        isError = errorDni,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next
+                        ),
+                        supportingText = {
+                            if (errorDni) Text("DNI no válido", color = MaterialTheme.colorScheme.error)
+                        },
                         label = { Text("DNI") },
                         readOnly = !modoEdicion,
                         modifier = Modifier
                             .width(180.dp)
                             .padding(16.dp, 16.dp, 0.dp, 0.dp)
                     )
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = {
-                            if (modoEdicion) {
-                                expanded = !expanded
-                            }
-                        },
-                        modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)
-                    ) {
-                        TextField(
-                            value = departamento?.nombreDpto?:"",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Departamento") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor()
-                        )
-
-                        ExposedDropdownMenu(
+                    if(login.rol?.descrip=="Coordinador TIC" || login.rol?.descrip=="Directivo" || login.rol?.descrip=="Administrador"){
+                        ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false },
+                            onExpandedChange = {
+                                if (modoEdicion) {
+                                    expanded = !expanded
+                                }
+                            },
+                            modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)
                         ) {
-                            listaDepartamentos.forEach { departamentos ->
-                                DropdownMenuItem(
-                                    text = { Text(text = departamentos.nombreDpto) },
-                                    onClick = {
-                                        departamento = departamentos
-                                        expanded = false
-                                    },
-                                    enabled = modoEdicion
-                                )
-                            }
-                        }
-                    }
-                    ExposedDropdownMenuBox(
-                        expanded = expanded2,
-                        onExpandedChange = {
-                            if (modoEdicion) {
-                                expanded2 = !expanded2
-                            }
-                        },
-                        modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)
-                    ) {
-                        TextField(
-                            value = rol?.descrip?:"",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Rol") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded2) },
-                            modifier = Modifier.menuAnchor()
-                        )
+                            TextField(
+                                value = departamento?.nombreDpto?:"",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Departamento") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.menuAnchor()
+                                    .width(180.dp)
+                            )
 
-                        ExposedDropdownMenu(
-                            expanded = expanded2,
-                            onDismissRequest = { expanded2 = false },
-                        ) {
-                            listaRoles.forEach { roles ->
-                                DropdownMenuItem(
-                                    text = { Text(text = roles.descrip) },
-                                    onClick = {
-                                        rol = roles
-                                        expanded2 = false
-                                    },
-                                    enabled = modoEdicion
-                                )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                            ) {
+                                listaDepartamentos.forEach { departamentos ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = departamentos.nombreDpto) },
+                                        onClick = {
+                                            departamento = departamentos
+                                            expanded = false
+                                        },
+                                        enabled = modoEdicion
+                                    )
+                                }
                             }
                         }
+                        ExposedDropdownMenuBox(
+                            expanded = expanded2,
+                            onExpandedChange = {
+                                if (modoEdicion) {
+                                    expanded2 = !expanded2
+                                }
+                            },
+                            modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)
+                        ) {
+                            TextField(
+                                value = rol?.descrip?:"",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Rol") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded2) },
+                                modifier = Modifier.menuAnchor()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded2,
+                                onDismissRequest = { expanded2 = false },
+                            ) {
+                                listaRoles.forEach { roles ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = roles.descrip) },
+                                        onClick = {
+                                            rol = roles
+                                            expanded2 = false
+                                        },
+                                        enabled = modoEdicion
+                                    )
+                                }
+                            }
+                        }
+                    }else{
+                        TextField(
+                            value = username,
+                            onValueChange = { username = it },
+                            singleLine = true,
+                            isError = if(error&&username == "") true else false,
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next
+                            ),
+                            label = { Text("Nombre de usuario") },
+                            readOnly = !modoEdicion,
+                            modifier = Modifier
+                                .width(200.dp)
+                                .padding(16.dp, 16.dp, 16.dp, 0.dp)
+                        )
                     }
                 }
-                Row(modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)) {
-                    TextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        label = { Text("Nombre de usuario") },
-                        readOnly = !modoEdicion,
-                        modifier = Modifier
-                            .width(200.dp)
-                            .padding(0.dp, 0.dp, 16.dp, 0.dp)
-                    )
+                if(login.rol?.descrip=="Coordinador TIC" || login.rol?.descrip=="Directivo" || login.rol?.descrip=="Administrador"){
+                    Row(modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 0.dp)) {
+                        TextField(
+                            value = username,
+                            onValueChange = { username = it },
+                            singleLine = true,
+                            isError = if(error&&username == "") true else false,
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next
+                            ),
+                            label = { Text("Nombre de usuario") },
+                            readOnly = !modoEdicion,
+                            modifier = Modifier
+                                .width(200.dp)
+                        )
+                    }
                 }
             }
         }
@@ -408,14 +513,15 @@ fun DialogCambioContraseña(
     modifier: Modifier = Modifier
 ){
 
-    var verContraseña by remember { mutableStateOf(false) }
-    var verContraseña2 by remember { mutableStateOf(false) }
-    var verContraseña3 by remember { mutableStateOf(false) }
+    var verContrasenya by remember { mutableStateOf(false) }
+    var verContrasenya2 by remember { mutableStateOf(false) }
+    var verContrasenya3 by remember { mutableStateOf(false) }
     var pwd by remember { mutableStateOf(profesor.pwd) }
     var pwdActual by remember { mutableStateOf("") }
     var pwdActualMD5 by remember { mutableStateOf("") }
     var nuevaPwd by remember { mutableStateOf("") }
     var nuevaPwd2 by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss
@@ -441,8 +547,10 @@ fun DialogCambioContraseña(
                             label = {
                                 Text("Contraseña")
                             },
-                            visualTransformation = if (verContraseña) VisualTransformation.None else PasswordVisualTransformation(),
+                            isError = if(pwdActual=="") error else false,
+                            visualTransformation = if (verContrasenya) VisualTransformation.None else PasswordVisualTransformation(),
                             modifier = Modifier.width(200.dp),
+                            supportingText ={ Text(if(pwdActual==""&&error)"Rellena este campo" else "", color = MaterialTheme.colorScheme.error)},
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Next
                             ),
@@ -450,7 +558,7 @@ fun DialogCambioContraseña(
                         )
                         Button(
                             onClick = {
-                                verContraseña = !verContraseña
+                                verContrasenya = !verContrasenya
                             },
                             colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
                             modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
@@ -472,8 +580,10 @@ fun DialogCambioContraseña(
                         label = {
                             Text("Contraseña nueva")
                         },
-                        visualTransformation = if (verContraseña2) VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = if(nuevaPwd=="") error else false,
+                        visualTransformation = if (verContrasenya2) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier.width(200.dp),
+                        supportingText ={ Text(if(nuevaPwd==""&&error)"Rellena este campo" else "", color = MaterialTheme.colorScheme.error)},
                         keyboardOptions = KeyboardOptions.Default.copy(
                             imeAction = ImeAction.Next
                         ),
@@ -481,7 +591,7 @@ fun DialogCambioContraseña(
                     )
                     Button(
                         onClick = {
-                            verContraseña2 = !verContraseña2
+                            verContrasenya2 = !verContrasenya2
                         },
                         colors = ButtonDefaults.buttonColors(
                             Color.Transparent,
@@ -507,16 +617,43 @@ fun DialogCambioContraseña(
                         label = {
                             Text("Repetir contraseña nueva")
                         },
-                        visualTransformation = if (verContraseña3) VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = if(nuevaPwd2=="") error else false,
+                        visualTransformation = if (verContrasenya3) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier.width(200.dp),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next
+                        supportingText ={ Text(if(nuevaPwd2==""&&error)"Rellena este campo" else "", color = MaterialTheme.colorScheme.error)},
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if(pwdActual =="" || nuevaPwd == "" || nuevaPwd2 == ""){
+                                    error = true
+                                }else{
+                                    if(profesor.pwd != ""){
+                                        pwdActualMD5 = encriptarMD5(pwdActual)
+                                        if (pwdActualMD5 == pwd) {
+                                            if (nuevaPwd == nuevaPwd2){
+                                                var profesor =  Profesor(idProfesor = profesor.idProfesor, pwd = nuevaPwd, dni = profesor.dni,
+                                                    username = profesor.username, email = profesor.email, rol = profesor.rol, departamento = profesor.departamento,
+                                                    apellidos = profesor.apellidos, nombre = profesor.nombre)
+                                                onActualizarProfesor(profesor)
+                                                onPwdChange(nuevaPwd)
+                                                onDismiss()
+                                            }else{
+                                                Toast.makeText(contexto, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else {
+                                            Toast.makeText(contexto, "La contraseña actual no es correcta", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }else{
+                                        onPwdChange(nuevaPwd)
+                                        onDismiss()
+                                    }
+                                }
+                            }
                         ),
                         singleLine = true
                     )
                     Button(
                         onClick = {
-                            verContraseña3 = !verContraseña3
+                            verContrasenya3 = !verContrasenya3
                         },
                         colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
                         modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
@@ -532,25 +669,29 @@ fun DialogCambioContraseña(
                 Row(modifier = Modifier.padding(16.dp,0.dp,16.dp,16.dp)) {
                     Button(
                         onClick = {
-                            if(profesor.pwd != ""){
-                                pwdActualMD5 = encriptarMD5(pwdActual)
-                                if (pwdActualMD5 == pwd) {
-                                    if (nuevaPwd == nuevaPwd2){
-                                        var profesor =  Profesor(idProfesor = profesor.idProfesor, pwd = nuevaPwd, dni = profesor.dni,
-                                            username = profesor.username, email = profesor.email, rol = profesor.rol, departamento = profesor.departamento,
-                                            apellidos = profesor.apellidos, nombre = profesor.nombre)
-                                        onActualizarProfesor(profesor)
-                                        onPwdChange(nuevaPwd)
-                                        onDismiss()
-                                    }else{
-                                        Toast.makeText(contexto, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    Toast.makeText(contexto, "La contraseña actual no es correcta", Toast.LENGTH_SHORT).show()
-                                }
+                            if(pwdActual =="" || nuevaPwd == "" || nuevaPwd2 == ""){
+                                error = true
                             }else{
-                                onPwdChange(nuevaPwd)
-                                onDismiss()
+                                if(profesor.pwd != ""){
+                                    pwdActualMD5 = encriptarMD5(pwdActual)
+                                    if (pwdActualMD5 == pwd) {
+                                        if (nuevaPwd == nuevaPwd2){
+                                            var profesor =  Profesor(idProfesor = profesor.idProfesor, pwd = nuevaPwd, dni = profesor.dni,
+                                                username = profesor.username, email = profesor.email, rol = profesor.rol, departamento = profesor.departamento,
+                                                apellidos = profesor.apellidos, nombre = profesor.nombre)
+                                            onActualizarProfesor(profesor)
+                                            onPwdChange(nuevaPwd)
+                                            onDismiss()
+                                        }else{
+                                            Toast.makeText(contexto, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(contexto, "La contraseña actual no es correcta", Toast.LENGTH_SHORT).show()
+                                    }
+                                }else{
+                                    onPwdChange(nuevaPwd)
+                                    onDismiss()
+                                }
                             }
                         },
                         modifier = Modifier.padding(0.dp,0.dp,16.dp,0.dp)
@@ -571,4 +712,19 @@ fun DialogCambioContraseña(
             }
         }
     }
+}
+fun esEmailValido(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+fun esDniValido(dni: String): Boolean {
+    val dniRegex = Regex("^[0-9]{8}[A-HJ-NP-TV-Z]$")
+    if (!dniRegex.matches(dni.uppercase())) return false
+
+    val letras = "TRWAGMYFPDXBNJZSQVHLCKE"
+    val numero = dni.substring(0, 8).toIntOrNull() ?: return false
+    val letraEsperada = letras[numero % 23]
+    val letraActual = dni.last().uppercaseChar()
+
+    return letraActual == letraEsperada
 }

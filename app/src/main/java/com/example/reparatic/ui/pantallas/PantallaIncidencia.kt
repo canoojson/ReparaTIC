@@ -1,7 +1,7 @@
 package com.example.reparatic.ui.pantallas
 
 import android.util.Log
-import android.widget.Toast
+ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,9 +11,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -45,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.reparatic.R
@@ -58,11 +58,16 @@ import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Profesor
 import com.example.reparatic.modelo.TiposHw
 import com.example.reparatic.modelo.Ubicacion
+import com.example.reparatic.ui.DatePickerWithFormattedString
+import com.example.reparatic.ui.TimePickerWithFormattedString
 import com.example.reparatic.ui.ViewModels.DepartamentoUIState
 import com.example.reparatic.ui.ViewModels.EstadoUIState
 import com.example.reparatic.ui.ViewModels.ProfesorUIState
 import com.example.reparatic.ui.ViewModels.TiposHwUIState
 import com.example.reparatic.ui.ViewModels.UbicacionUIState
+import com.example.reparatic.ui.esFechaValida
+import com.example.reparatic.ui.formatearFecha
+import com.example.reparatic.ui.getFechaActual
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,8 +83,6 @@ fun PantallaIncidencia(
     onInsertarPulsado: (Incidencia) -> Unit,
     onActualizarPulsado: (Incidencia) -> Unit,
     onEliminarPulsado: (id: Int) -> Unit,
-    onUbicacionEliminada: (id: Int) -> Unit,
-    onUbicacionActualizada: (Ubicacion) -> Unit,
     onIncidenciaSoftwareEliminada : (IncidenciaSoftware) -> Unit,
     onIncidenciaHardwareEliminada : (IncidenciaHardware) -> Unit,
     modifier: Modifier = Modifier
@@ -91,11 +94,17 @@ fun PantallaIncidencia(
     var descripcion by remember { mutableStateOf(incidencia.descripcion) }
     var observaciones by remember { mutableStateOf(incidencia.observaciones) }
     var mas_info by remember { mutableStateOf(incidencia.mas_info) }
-    var comentarios by remember { mutableStateOf<List<Comentario>>(emptyList()) }
+    var comentarios by remember {
+        if(incidencia.comentarios.isNullOrEmpty()){
+            mutableStateOf(emptyList<Comentario>())
+        }else{
+            mutableStateOf(incidencia.comentarios)
+        }
+    }
     var nuevoComentario by remember { mutableStateOf("") }
     var tiempoInvertido by remember { mutableStateOf(incidencia.tiempo_invertido) }
     var fechaIncidencia by remember { mutableStateOf(incidencia.fecha_incidencia) }
-    if(fechaIncidencia==""){
+    if(fechaIncidencia=="" || fechaIncidencia==null){
         fechaIncidencia = formatearFecha(getFechaActual())
     }
     var responsable by remember { mutableStateOf(incidencia.responsable) }
@@ -110,6 +119,8 @@ fun PantallaIncidencia(
     var clave by remember { mutableStateOf(incidenciaSoftware?.clave?: "") }
     var so by remember { mutableStateOf(incidenciaSoftware?.SO?: "") }
     var fechaResolucion by remember { mutableStateOf(incidencia.fecha_resolucion) }
+    var errorFecha by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf(false) }
 
     //Permisos
     val permiso = Permiso(codPermiso = 2, descrip = "Modificar/Borrar incidencias")
@@ -147,7 +158,7 @@ fun PantallaIncidencia(
     //Recuperamos los datos de las listas
     when(uiStatePro){
         is ProfesorUIState.ObtenerExito ->
-            listaProfesores = uiStatePro.profesores
+            listaProfesores = uiStatePro.profesoresInformatica
         else -> PantallaError(modifier= modifier.fillMaxWidth())
     }
     when(uiStateDep){
@@ -180,7 +191,6 @@ fun PantallaIncidencia(
     }
 
     //Dialogos
-    var mostrarDialogoUbicacion by remember { mutableStateOf(false) }
     var mostrarDialogoUbicacionDetalles by remember { mutableStateOf(false) }
 
     val contexto = LocalContext.current
@@ -197,14 +207,14 @@ fun PantallaIncidencia(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Row( ) {
-
                     //Aqui mostramos el boton de Guardar si estamos en el modo de edicion
                     if(login.rol!!.permisos.isNotEmpty()){
-                        if(login.rol.permisos.contains(permiso)){
+                        if(login.rol.permisos.contains(permiso) || login.idProfesor == (incidencia.profesor?.idProfesor
+                                ?: 0)
+                        ){
                             if(enModoEdicion){
                                 Button(
                                     onClick = {
-
                                         if(idIncidencia==0){
                                             var incidenciaNueva : Incidencia
                                             incidenciaHardware = IncidenciaHardware(idh = 0, modelo = modelo, numSerie = numserie, tipoHw = tipoHw)
@@ -215,28 +225,42 @@ fun PantallaIncidencia(
                                                     idIncidencia = 0,
                                                     tipo =tipo,
                                                     fecha_incidencia = fechaIncidencia,
-                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                                    fecha_introduccion = formatearFecha(
+                                                        getFechaActual()
+                                                    ), profesor = login, departamento = departamento, ubicacion = ubicacion,
                                                     descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
                                                     tiempo_invertido = tiempoInvertido,
                                                     mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
-                                                if(incidenciaSoftware != null){
-                                                    onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
-                                                }
                                             }else{
                                                 incidenciaNueva = Incidencia(
                                                     idIncidencia = 0,
                                                     tipo =tipo,
                                                     fecha_incidencia = fechaIncidencia,
-                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = login, departamento = departamento, ubicacion = ubicacion,
+                                                    fecha_introduccion = formatearFecha(
+                                                        getFechaActual()
+                                                    ), profesor = login, departamento = departamento, ubicacion = ubicacion,
                                                     descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
                                                     tiempo_invertido = tiempoInvertido,
                                                     mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
-                                                if(incidenciaHardware != null){
-                                                    onIncidenciaHardwareEliminada(incidenciaHardware!!)
-                                                }
                                             }
-                                            onInsertarPulsado(incidenciaNueva)
-                                            Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
+                                            if(descripcion == ""|| descripcion.length>80|| (observaciones?.length ?:0) >400|| errorFecha || ubicacion == null
+                                                || tipo == "" || (modelo == "" || numserie == "" || tipoHw == null) && (software == "" || clave == "" || so == "" )){
+                                                error = true
+                                            }else{
+                                                if(tipo == "HW"){
+                                                    if(incidenciaSoftware!=null){
+                                                        onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                                    }
+                                                }else{
+                                                    if(incidenciaHardware!=null){
+                                                        onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                                    }
+                                                }
+                                                onInsertarPulsado(incidenciaNueva)
+                                                Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
+                                                isEditable = false
+                                                enModoEdicion = false
+                                            }
                                         }else{
                                             var incidenciaActu : Incidencia
                                             if(tipo == "HW"){
@@ -245,33 +269,44 @@ fun PantallaIncidencia(
                                                     idIncidencia = incidencia.idIncidencia,
                                                     tipo =tipo,
                                                     fecha_incidencia = fechaIncidencia,
-                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
+                                                    fecha_introduccion = formatearFecha(
+                                                        getFechaActual()
+                                                    ), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
                                                     descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable,
                                                     fecha_resolucion = fechaResolucion, tiempo_invertido = tiempoInvertido,
                                                     mas_info = null, comentarios = emptyList(), incidenciaHardware = incidenciaHardware, incidenciaSoftware = null)
-                                                if(incidenciaSoftware != null){
-                                                    onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
-                                                }
                                             }else{
                                                 incidenciaSoftware = IncidenciaSoftware(ids = incidencia.incidenciaSoftware?.ids?: 0, software = software, clave = clave, SO = so)
                                                 incidenciaActu = Incidencia(
                                                     idIncidencia = incidencia.idIncidencia,
                                                     tipo =tipo,
                                                     fecha_incidencia = fechaIncidencia,
-                                                    fecha_introduccion = formatearFecha(getFechaActual()), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
+                                                    fecha_introduccion = formatearFecha(
+                                                        getFechaActual()
+                                                    ), profesor = incidencia.profesor, departamento = departamento, ubicacion = ubicacion,
                                                     descripcion = descripcion, observaciones = observaciones, estado = estado, responsable = responsable, fecha_resolucion = fechaResolucion,
                                                     tiempo_invertido = tiempoInvertido,
                                                     mas_info = null, comentarios = emptyList(), incidenciaHardware = null, incidenciaSoftware = incidenciaSoftware)
-                                                if(incidenciaHardware != null){
-                                                    onIncidenciaHardwareEliminada(incidenciaHardware!!)
-                                                }
                                             }
-                                            onActualizarPulsado(incidenciaActu)
-                                            Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
+                                            if(descripcion == ""||descripcion.length>80||(observaciones?.length ?:0) >400||errorFecha || ubicacion == null
+                                                || tipo == "" || (modelo == "" || numserie == "" || tipoHw == null) && (software == "" || clave == "" || so == "" )){
+                                                error = true
+                                            }else{
+                                                if(tipo == "HW"){
+                                                    if(incidenciaSoftware!=null){
+                                                        onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                                    }
+                                                }else{
+                                                    if(incidenciaHardware!=null){
+                                                        onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                                    }
+                                                }
+                                                onActualizarPulsado(incidenciaActu)
+                                                Toast.makeText(contexto, "Incidencia actualizada correctamente", Toast.LENGTH_SHORT).show()
+                                                isEditable = false
+                                                enModoEdicion = false
+                                            }
                                         }
-
-                                        isEditable = false
-                                        enModoEdicion = false
                                     },
                                     elevation = ButtonDefaults.buttonElevation(
                                         defaultElevation = 10.dp,
@@ -369,9 +404,6 @@ fun PantallaIncidencia(
                                                     incidenciaHardware = incidenciaHardware,
                                                     incidenciaSoftware = null
                                                 )
-                                                if (incidenciaSoftware != null) {
-                                                    onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
-                                                }
                                             } else {
                                                 incidenciaNueva = Incidencia(
                                                     idIncidencia = 0,
@@ -394,16 +426,23 @@ fun PantallaIncidencia(
                                                     incidenciaHardware = null,
                                                     incidenciaSoftware = incidenciaSoftware
                                                 )
-                                                if (incidenciaHardware != null) {
+                                            }
+                                            if(descripcion == ""||descripcion.length>80||(observaciones?.length ?:0) >400||errorFecha|| ubicacion == null
+                                                || tipo == "" || (modelo == "" || numserie == "" || tipoHw == null) && (software == "" || clave == "" || so == "" )){
+                                                error = true
+                                            }else{
+                                                if(tipo == "HW"){
+                                                    if(incidenciaSoftware!=null){
+                                                        onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                                    }
+                                                }else{
                                                     onIncidenciaHardwareEliminada(incidenciaHardware!!)
                                                 }
+                                                onInsertarPulsado(incidenciaNueva)
+                                                Toast.makeText(contexto, "Incidencia guardada correctamente", Toast.LENGTH_SHORT).show()
+                                                isEditable = false
+                                                enModoEdicion = false
                                             }
-                                            onInsertarPulsado(incidenciaNueva)
-                                            Toast.makeText(
-                                                contexto,
-                                                "Incidencia guardada correctamente",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
                                         },
                                         elevation = ButtonDefaults.buttonElevation(
                                             defaultElevation = 10.dp,
@@ -434,7 +473,19 @@ fun PantallaIncidencia(
                     )
                     TextField(
                         value = descripcion,
-                        onValueChange = { descripcion = it },
+                        onValueChange = {
+                            descripcion = it
+                        },
+                        isError =
+                            if(descripcion=="" || descripcion.length>80){
+                                error
+                            }else{
+                                false
+                            },
+                        singleLine = true,
+                        supportingText = {
+                            Text(text = descripcion.length.toString() + "/80" + "       " +
+                                    if(descripcion.length>80) "Máximo de caracteres alcanzado" else if(descripcion==""&&error) "Rellena este campo antes de continuar" else "") },
                         label = { Text("Descripción") },
                         modifier = Modifier.width(500.dp)
                             .padding(0.dp, 16.dp, 16.dp, 16.dp),
@@ -443,130 +494,143 @@ fun PantallaIncidencia(
                     TextField(
                         value = fechaIncidencia?: formatearFecha(getFechaActual()),
                         onValueChange = {},
+                        isError = errorFecha,
+                        supportingText = {Text(text =
+                                if(errorFecha) "No puedes introducir una fecha futura" else if(fechaIncidencia==""&&errorFecha)
+                                    "Rellena este campo antes de continuar" else "")},
                         readOnly = true,
                         label = { Text("Fecha incidencia") },
                         modifier = Modifier.width(200.dp).padding(0.dp, 16.dp, 0.dp, 16.dp)
                     )
                     if(enModoEdicion){
                         DatePickerWithFormattedString{ fecha ->
-                            fechaIncidencia = fecha
+                            val fechaFormateada = formatearFecha(fecha)
+                            Log.d("fecha", fechaFormateada)
+                            fechaIncidencia = fechaFormateada
+                            errorFecha = !esFechaValida(fechaFormateada)
+                            Log.d("e", errorFecha.toString())
                         }
                     }
 
                 }
 
-                Row {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = {
-                            if(enModoEdicion){
-                                expanded = !expanded
-                            }
-                        }
-                    ) {
-                        TextField(
-                            value = (responsable?.nombre?: "") + " " + (responsable?.apellidos?:""),
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Responsable") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor()
-                        )
 
-                        ExposedDropdownMenu(
+                    Row {
+                        ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier
-                                .heightIn(max = 400.dp)
+                            onExpandedChange = {
+                                if (enModoEdicion && (login.rol?.descrip=="Coordinador TIC" || login.rol?.descrip=="Directivo" || login.rol?.descrip=="Administrador")) {
+                                    expanded = !expanded
+                                }
+                            }
                         ) {
-                            listaProfesores.forEach { profesor ->
-                                DropdownMenuItem(
-                                    text = { Text(text = profesor.nombre + " " + profesor.apellidos) },
-                                    onClick = {
-                                        responsable = profesor
-                                        expanded = false
-                                    },
-                                    enabled = enModoEdicion
-                                )
+                            TextField(
+                                value = (responsable?.nombre ?: "") + " " + (responsable?.apellidos ?: ""),
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Responsable") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.menuAnchor()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier
+                                    .heightIn(max = 400.dp)
+                            ) {
+                                listaProfesores.forEach { profesor ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = profesor.nombre + " " + profesor.apellidos) },
+                                        onClick = {
+                                            responsable = profesor
+                                            expanded = false
+                                        },
+                                        enabled = enModoEdicion
+                                    )
+                                }
                             }
                         }
-                    }
-                    ExposedDropdownMenuBox(
-                        expanded = expanded2,
-                        onExpandedChange = {
-                            if(enModoEdicion){
-                                expanded2 = !expanded2
-                            }
-                        },
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                    ) {
-                        TextField(
-                            value = departamento?.nombreDpto?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Departamento afectado") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded2) },
-                            modifier = Modifier.menuAnchor()
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded2,
-                            onDismissRequest = { expanded2 = false },
-                            modifier = Modifier
-                                .heightIn(max = 400.dp)
-                        ) {
-
-                            listaDepartamentos.forEach { departamentos ->
-                                DropdownMenuItem(
-                                    text = { Text(text = departamentos.nombreDpto) },
-                                    onClick = {
-                                        departamento = departamentos
-                                        expanded2 = false
-                                    },
-                                    enabled = enModoEdicion
-                                )
-                            }
-
-                        }
-                    }
-                    ExposedDropdownMenuBox(
-                        expanded = expanded3,
-                        onExpandedChange = {
-                            if(enModoEdicion){
-                                expanded3 = !expanded3
-                            }
-                        },
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
-                    ) {
-                        TextField(
-                            value = estado?.descrip?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Estado") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded3) },
-                            modifier = Modifier.menuAnchor()
-                        )
-
-                        ExposedDropdownMenu(
+                        ExposedDropdownMenuBox(
                             expanded = expanded3,
-                            onDismissRequest = { expanded3 = false },
-                            modifier = Modifier
-                                .heightIn(max = 400.dp)
+                            onExpandedChange = {
+                                if(enModoEdicion && (login.rol?.descrip == "Coordinador TIC" || login.rol?.descrip == "Directivo" || login.rol?.descrip == "Administrador" || (incidencia.responsable?.idProfesor
+                                        ?: 0) == login.idProfesor)
+                                ){
+                                    expanded3 = !expanded3
+                                }
+                            },
+                            modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
                         ) {
-                            listaEstados.forEach { estados ->
-                                DropdownMenuItem(
-                                    text = { Text(text = estados.descrip) },
-                                    onClick = {
-                                        estado = estados
-                                        expanded3 = false
-                                    },
-                                    enabled = enModoEdicion
-                                )
+                            TextField(
+                                value = estado?.descrip?: "",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Estado") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded3) },
+                                modifier = Modifier.menuAnchor()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded3,
+                                onDismissRequest = { expanded3 = false },
+                                modifier = Modifier
+                                    .heightIn(max = 400.dp)
+                            ) {
+                                listaEstados.forEach { estados ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = estados.descrip) },
+                                        onClick = {
+                                            estado = estados
+                                            expanded3 = false
+                                        },
+                                        enabled = enModoEdicion
+                                    )
+                                }
+                            }
+                        }
+                        ExposedDropdownMenuBox(
+                            expanded = expanded2,
+                            onExpandedChange = {
+                                if(enModoEdicion){
+                                    expanded2 = !expanded2
+                                }
+                            },
+                            modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
+                        ) {
+                            TextField(
+                                value = departamento?.nombreDpto?: "",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Departamento afectado") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded2) },
+                                modifier = Modifier.menuAnchor()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded2,
+                                onDismissRequest = { expanded2 = false },
+                                modifier = Modifier
+                                    .heightIn(max = 400.dp)
+                            ) {
+
+                                listaDepartamentos.forEach { departamentos ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = departamentos.nombreDpto) },
+                                        onClick = {
+                                            departamento = departamentos
+                                            expanded2 = false
+                                        },
+                                        enabled = enModoEdicion
+                                    )
+                                }
+
                             }
                         }
                     }
                 }
-                if((estado?.descrip?: "Solucionada")=="Solucionada"){
+                if((estado?.descrip?: "")=="Solucionada" && (login.rol?.descrip == "Coordinador TIC" || login.rol?.descrip == "Directivo" || login.rol?.descrip == "Administrador" || (incidencia.responsable?.idProfesor
+                        ?: 0) == login.idProfesor)){
                     Row {
                         TextField(
                             value = formatearFecha(getFechaActual()),
@@ -583,9 +647,18 @@ fun PantallaIncidencia(
                 TextField(
                     value = observaciones!!,
                     onValueChange = { observaciones = it },
+                    isError= if((observaciones?.length?:0)>400){
+                        error
+                    }else{
+                        false
+                    },
+                    maxLines = 4,
                     label = { Text("Observaciones") },
+                    supportingText = {Text(text = observaciones?.length.toString() + "/400" + "       " +
+                            if((observaciones?.length?:0)>400) "Máximo de caracteres alcanzado" else "")},
                     modifier = Modifier.fillMaxWidth()
-                        .height(100.dp),
+                        .height(150.dp)
+                        .padding(16.dp, 0.dp, 0.dp, 16.dp),
                     readOnly = !enModoEdicion
                 )
                 Row {
@@ -595,13 +668,19 @@ fun PantallaIncidencia(
                             if(enModoEdicion){
                                 expanded4 = !expanded4
                             }
-                        }
+                        },
+                        modifier = Modifier.padding(16.dp,0.dp,16.dp,16.dp)
                     ) {
                         TextField(
                             value = ubicacion?.nombre ?:"",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Ubicacion") },
+                            isError = if(ubicacion==null){
+                                error
+                            }else{
+                                false
+                            },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded4) },
                             modifier = Modifier.menuAnchor()
                         )
@@ -624,6 +703,21 @@ fun PantallaIncidencia(
                             }
                         }
                     }
+                    if (ubicacion != null){
+                        Button(
+                            onClick = {
+                                mostrarDialogoUbicacionDetalles = true
+                            },
+                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
+                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.enlace_roto_),
+                                contentDescription = "Editar ubicación",
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    }
                     ExposedDropdownMenuBox(
                         expanded = expanded5,
                         onExpandedChange = {
@@ -631,12 +725,17 @@ fun PantallaIncidencia(
                                 expanded5 = !expanded5
                             }
                         },
-                        modifier = Modifier.padding(16.dp,0.dp,0.dp,0.dp)
+                        modifier = Modifier.padding(0.dp,0.dp,16.dp,16.dp)
                     ) {
                         TextField(
                             value = tipo,
                             onValueChange = {},
                             readOnly = true,
+                            isError = if (tipo == ""){
+                                error
+                            }else{
+                                false
+                            },
                             label = { Text("Tipo de Incidencia") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded5) },
                             modifier = Modifier.menuAnchor()
@@ -660,22 +759,9 @@ fun PantallaIncidencia(
                             }
                         }
                     }
-                    if (ubicacion != null){
-                        Button(
-                            onClick = {
-                                mostrarDialogoUbicacionDetalles = true
-                            },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent, Color.Transparent, Color.Transparent,Color.Transparent),
-                            modifier = Modifier.padding(0.dp,16.dp,0.dp,0.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.enlace_roto),
-                                contentDescription = "Editar ubicación",
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    }
-                    if(estado?.descrip=="Solucionada") {
+                    if(estado?.descrip == "Solucionada" && (login.rol?.descrip == "Coordinador TIC" || login.rol?.descrip == "Directivo" || login.rol?.descrip == "Administrador")
+                        || (responsable?.idProfesor ?: 0) == login.idProfesor
+                    ) {
                         TextField(
                             value = tiempoInvertido ?: "00:00:00",
                             onValueChange = {},
@@ -696,6 +782,11 @@ fun PantallaIncidencia(
                             value = modelo,
                             onValueChange = {modelo = it},
                             readOnly = !enModoEdicion,
+                            isError = if(modelo==""){
+                                error
+                            }else{
+                                false
+                            },
                             label = { Text("Modelo") },
                             modifier = Modifier.width(200.dp)
                                 .padding(0.dp, 16.dp, 0.dp, 16.dp),
@@ -705,6 +796,11 @@ fun PantallaIncidencia(
                             value = numserie,
                             onValueChange = {numserie = it},
                             readOnly = !enModoEdicion,
+                            isError = if(numserie==""){
+                                error
+                            }else{
+                                false
+                            },
                             label = { Text("Número de serie") },
                             modifier = Modifier
                                 .padding(16.dp, 16.dp,0.dp,0.dp),
@@ -723,6 +819,11 @@ fun PantallaIncidencia(
                                 value = tipoHw?.descrip ?: "",
                                 onValueChange = {  },
                                 readOnly = true,
+                                isError = if(tipoHw==null){
+                                    error
+                                }else{
+                                    false
+                                },
                                 label = { Text("Tipo Hardware") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded6) },
                                 modifier = Modifier.menuAnchor()
@@ -751,6 +852,11 @@ fun PantallaIncidencia(
                             value = software,
                             onValueChange = {software = it},
                             readOnly = !enModoEdicion,
+                            isError = if(software==""){
+                                error
+                            }else{
+                                false
+                            },
                             label = { Text("Software") },
                             modifier = Modifier.width(200.dp)
                                 .padding(0.dp, 16.dp, 0.dp, 16.dp),
@@ -760,6 +866,11 @@ fun PantallaIncidencia(
                             value = clave,
                             onValueChange = { clave = it },
                             readOnly = !enModoEdicion,
+                            isError = if(clave==""){
+                                error
+                            }else{
+                                false
+                            },
                             label = { Text("Clave") },
                             modifier = Modifier
                                 .padding(16.dp, 16.dp,0.dp,0.dp),
@@ -769,6 +880,11 @@ fun PantallaIncidencia(
                             value = so,
                             onValueChange = {so = it},
                             readOnly = !enModoEdicion,
+                            isError = if(so==""){
+                                error
+                            }else{
+                                false
+                            },
                             label = { Text("S.O") },
                             modifier = Modifier
                                 .padding(16.dp, 16.dp,0.dp,0.dp),
@@ -820,15 +936,15 @@ fun PantallaIncidencia(
                     }
                 }*/
             }
-        }
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            if(incidencia.comentarios!=null && comentarios.isEmpty()){
-                comentarios = incidencia.comentarios
+            if(comentarios.isEmpty()){
+                Log.v("ENTRO AQUI","SISIS")
+                comentarios = emptyList()
             }
             comentarios.forEach{ comentario ->
                 Column(modifier = modifier.fillMaxWidth()
@@ -842,7 +958,6 @@ fun PantallaIncidencia(
                 }
             }
 
-            Log.v("Incidencia", idIncidencia.toString())
             if(idIncidencia!=0) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -860,7 +975,6 @@ fun PantallaIncidencia(
                     Button(
                         onClick = {
                             if (nuevoComentario.isNotBlank()) {
-                                Log.v("ReparaTICApp", login.toString())
                                 comentarios = comentarios + Comentario(
                                     profesor = login,
                                     comentario = nuevoComentario,
@@ -903,9 +1017,6 @@ fun PantallaIncidencia(
                                             incidenciaHardware = incidenciaHardware,
                                             incidenciaSoftware = null
                                         )
-                                        if (incidenciaSoftware != null) {
-                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
-                                        }
                                     } else {
 
                                         incidenciaNueva = Incidencia(
@@ -927,11 +1038,24 @@ fun PantallaIncidencia(
                                             incidenciaHardware = null,
                                             incidenciaSoftware = incidenciaSoftware
                                         )
-                                        if (incidenciaHardware != null) {
-                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
-                                        }
+
                                     }
-                                    onInsertarPulsado(incidenciaNueva)
+                                    if(descripcion == ""||descripcion.length>80||(observaciones?.length ?:0) >400||errorFecha|| ubicacion == null
+                                        || tipo == "" || (modelo == "" || numserie == "" || tipoHw == null) && (software == "" || clave == "" || so == "" )){
+                                        error = true
+                                    }else{
+                                        if(tipo == "HW"){
+                                            if(incidenciaSoftware!=null){
+                                                onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                            }
+                                        }else{
+                                            if(incidenciaHardware!=null){
+                                                onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                            }
+                                        }
+                                        onInsertarPulsado(incidenciaNueva)
+                                        Toast.makeText(contexto, "Comentario insertado correctamente", Toast.LENGTH_SHORT).show()
+                                    }
                                 } else {
                                     var incidenciaActu: Incidencia
                                     if (tipo == "HW") {
@@ -960,9 +1084,7 @@ fun PantallaIncidencia(
                                             incidenciaHardware = incidenciaHardware,
                                             incidenciaSoftware = null
                                         )
-                                        if (incidenciaSoftware != null) {
-                                            onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
-                                        }
+
                                     } else {
                                         incidenciaSoftware = IncidenciaSoftware(
                                             ids = incidencia.incidenciaSoftware?.ids ?: 0,
@@ -989,11 +1111,23 @@ fun PantallaIncidencia(
                                             incidenciaHardware = null,
                                             incidenciaSoftware = incidenciaSoftware
                                         )
-                                        if (incidenciaHardware != null) {
-                                            onIncidenciaHardwareEliminada(incidenciaHardware!!)
-                                        }
                                     }
-                                    onActualizarPulsado(incidenciaActu)
+                                    if(descripcion == "" ||descripcion.length>80||(observaciones?.length ?:0) >400||errorFecha|| ubicacion == null
+                                        || tipo == "" || (modelo == "" || numserie == "" || tipoHw == null) && (software == "" || clave == "" || so == "" )){
+                                        error = true
+                                    }else{
+                                        if(tipo == "HW"){
+                                            if(incidenciaSoftware!=null){
+                                                onIncidenciaSoftwareEliminada(incidenciaSoftware!!)
+                                            }
+                                        }else{
+                                            if(incidenciaHardware!=null){
+                                                onIncidenciaHardwareEliminada(incidenciaHardware!!)
+                                            }
+                                        }
+                                        onActualizarPulsado(incidenciaActu)
+                                        Toast.makeText(contexto, "Comentario insertado correctamente", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }

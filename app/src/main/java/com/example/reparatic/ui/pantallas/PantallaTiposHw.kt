@@ -39,43 +39,45 @@ import androidx.compose.ui.window.Dialog
 import com.example.reparatic.modelo.Departamento
 import com.example.reparatic.modelo.Permiso
 import com.example.reparatic.modelo.Profesor
+import com.example.reparatic.modelo.TiposHw
 import com.example.reparatic.ui.ViewModels.DepartamentoUIState
+import com.example.reparatic.ui.ViewModels.TiposHwUIState
 import com.example.reparatic.ui.ViewModels.UbicacionUIState
 
 @Composable
-fun PantallaInicioDepartamentos(
-    appUIState: DepartamentoUIState,
-    onDepartamentosObtenidos: ()-> Unit,
-    onDepartamentoPulsado : (departamento: Departamento) -> Unit,
+fun PantallaInicioTiposHw(
+    appUIState: TiposHwUIState,
+    onTiposHwObtenidos: ()-> Unit,
+    onTipoHwPulsado : (tipoHw: TiposHw) -> Unit,
     modifier: Modifier = Modifier
 ){
     when(appUIState){
-        is DepartamentoUIState.Error -> PantallaError(modifier= modifier.fillMaxWidth())
-        is DepartamentoUIState.Cargando -> PantallaCargando(modifier = modifier.fillMaxWidth())
-        is DepartamentoUIState.ObtenerExito -> PantallaDepartamentos(
-            lista = appUIState.departamentos,
+        is TiposHwUIState.Error -> PantallaError(modifier= modifier.fillMaxWidth())
+        is TiposHwUIState.Cargando -> PantallaCargando(modifier = modifier.fillMaxWidth())
+        is TiposHwUIState.ObtenerExito -> PantallaTiposHw(
+            lista = appUIState.tiposHw,
             modifier= modifier.fillMaxWidth(),
-            onDepartamentoPulsado = onDepartamentoPulsado
+            onTipoHwPulsado = onTipoHwPulsado
         )
-        is DepartamentoUIState.ActualizarExito -> onDepartamentosObtenidos()
-        is DepartamentoUIState.CrearExito -> onDepartamentosObtenidos()
-        is DepartamentoUIState.EliminarExito -> onDepartamentosObtenidos()
+        is TiposHwUIState.ActualizarExito -> onTiposHwObtenidos()
+        is TiposHwUIState.CrearExito -> onTiposHwObtenidos()
+        is TiposHwUIState.EliminarExito -> onTiposHwObtenidos()
     }
 }
 
 @Composable
-fun PantallaDepartamentos(
-    lista: List<Departamento>,
-    onDepartamentoPulsado : (departamento: Departamento) -> Unit,
+fun PantallaTiposHw(
+    lista: List<TiposHw>,
+    onTipoHwPulsado : (tipoHw: TiposHw) -> Unit,
     modifier: Modifier = Modifier
 ){
     LazyColumn {
-        items(lista) { departamento ->
+        items(lista) { tipoHw ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        onDepartamentoPulsado(departamento)
+                        onTipoHwPulsado(tipoHw)
                     }
                     .padding(8.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -84,7 +86,7 @@ fun PantallaDepartamentos(
                     .fillMaxWidth()
                     .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically){
-                    Text(text = departamento.nombreDpto)
+                    Text(text = tipoHw.descrip)
                 }
             }
         }
@@ -92,23 +94,23 @@ fun PantallaDepartamentos(
 }
 
 @Composable
-fun DepartamentoDialog(
+fun TipoHwDialog(
     onDismiss: () -> Unit,
-    onActualizarPulsado: (departamento: Departamento) -> Unit,
-    onEliminarPulsado: (departamento: Departamento) -> Unit,
-    onInsertarPulsado: (departamento: Departamento) -> Unit,
+    onActualizarPulsado: (tipoHw: TiposHw) -> Unit,
+    onEliminarPulsado: (tipoHw: TiposHw) -> Unit,
+    onInsertarPulsado: (tipoHw: TiposHw) -> Unit,
     login:Profesor,
-    departamento: Departamento
+    tipoHw: TiposHw
 ) {
     var enModoEditar by remember {
-        if(departamento.codDpto==0){
+        if(tipoHw.idTipoHw==0){
             mutableStateOf(true)
         }else{
             mutableStateOf(false)
         }
     }
-    var nombreDepartamento by remember { mutableStateOf(departamento.nombreDpto) }
-    var departamentoActualizado by remember { mutableStateOf(Departamento(codDpto = departamento.codDpto, nombreDpto = nombreDepartamento)) }
+    var nombreTipoHw by remember { mutableStateOf(tipoHw.descrip) }
+    var tipoHwActualizado by remember { mutableStateOf(TiposHw(idTipoHw = tipoHw.idTipoHw, descrip = nombreTipoHw)) }
     val contexto = LocalContext.current
     val permiso = Permiso(codPermiso = 12, descrip = "Modificar/Eliminar departamentos")
     var error by remember { mutableStateOf(false) }
@@ -130,24 +132,26 @@ fun DepartamentoDialog(
                     if(login.rol?.permisos?.contains(permiso) == true){
                         Button(
                             onClick = {
-                                if(departamento.codDpto==0){
-                                    if(nombreDepartamento.isNotEmpty()){
-                                        onInsertarPulsado(Departamento(codDpto = 0,nombreDpto = nombreDepartamento))
-                                        Toast.makeText(contexto, "Departamento insertado correctamente", Toast.LENGTH_SHORT).show()
-                                        enModoEditar = !enModoEditar
+                                if(enModoEditar){
+                                    if(tipoHw.idTipoHw==0){
+                                        if(nombreTipoHw.isNotEmpty()){
+                                            onInsertarPulsado(TiposHw(idTipoHw = 0, descrip = nombreTipoHw))
+                                            Toast.makeText(contexto, "Tipo de hardware insertado correctamente", Toast.LENGTH_SHORT).show()
+                                            enModoEditar = !enModoEditar
+                                        }else{
+                                            error = true
+                                            Toast.makeText(contexto, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
+                                        }
                                     }else{
-                                        error = true
-                                        Toast.makeText(contexto, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
-                                    }
-                                }else if(enModoEditar){
-                                    if(nombreDepartamento.isNotEmpty()){
-                                        departamentoActualizado = Departamento(codDpto = departamento.codDpto, nombreDpto = nombreDepartamento)
-                                        onActualizarPulsado(departamentoActualizado)
-                                        Toast.makeText(contexto, "Cambios guardados correctamente", Toast.LENGTH_SHORT).show()
-                                        enModoEditar = !enModoEditar
-                                    }else{
-                                        error = true
-                                        Toast.makeText(contexto, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
+                                        if(nombreTipoHw.isNotEmpty()){
+                                            tipoHwActualizado = TiposHw(idTipoHw = tipoHw.idTipoHw, descrip = nombreTipoHw)
+                                            onActualizarPulsado(tipoHwActualizado)
+                                            Toast.makeText(contexto, "Cambios guardados correctamente", Toast.LENGTH_SHORT).show()
+                                            enModoEditar = !enModoEditar
+                                        }else{
+                                            error = true
+                                            Toast.makeText(contexto, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }else{
                                     enModoEditar = !enModoEditar
@@ -160,7 +164,7 @@ fun DepartamentoDialog(
                                 disabledElevation = 0.dp
                             )
                         ) {
-                            if(enModoEditar || departamento.codDpto==0) {
+                            if(enModoEditar || tipoHw.idTipoHw==0) {
                                 Image(
                                     modifier = Modifier.size(20.dp),
                                     painter = painterResource(R.drawable.guardar_el_archivo),
@@ -175,9 +179,9 @@ fun DepartamentoDialog(
                                     contentDescription = "Editar")
                             }
                         }
-                        if(departamento.codDpto!=0){
+                        if(tipoHw.idTipoHw!=0){
                             Button(onClick = {
-                                onEliminarPulsado(departamento)
+                                onEliminarPulsado(tipoHw)
                             },
                                 elevation = ButtonDefaults.buttonElevation(
                                     defaultElevation = 10.dp,
@@ -198,8 +202,8 @@ fun DepartamentoDialog(
                     }
                 }
                 TextField(
-                    value = nombreDepartamento,
-                    onValueChange = { nombreDepartamento = it },
+                    value = nombreTipoHw,
+                    onValueChange = { nombreTipoHw = it },
                     label = { Text("Nombre") },
                     isError = error,
                     modifier = Modifier.padding(0.dp, 16.dp, 16.dp, 16.dp),
