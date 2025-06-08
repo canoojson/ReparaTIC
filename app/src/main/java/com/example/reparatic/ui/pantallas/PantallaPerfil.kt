@@ -238,8 +238,30 @@ fun PantallaProfesor(
                             }
                         }
                         //Si no lo estamos, mostramos el de editar
-                    if((profesor.rol?.descrip ?: "") == "Administrador" && profesor.idProfesor!=0){
-                        if(login.rol?.permisos?.contains(permiso) == true && profesor.idProfesor != login.idProfesor){
+                    if(profesor.idProfesor!=0){
+                        if((profesor.rol?.descrip ?: "") == "Administrador" && profesor.idProfesor!=0){
+                            if(login.rol?.permisos?.contains(permiso) == true && profesor.idProfesor != login.idProfesor){
+                                Button(
+                                    onClick = {
+                                        onEliminarPulsado(perfil)
+                                    },
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 10.dp,
+                                        pressedElevation = 15.dp,
+                                        disabledElevation = 0.dp
+                                    ),
+                                    colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
+                                    modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
+                                ) {
+                                    Image(
+                                        modifier= Modifier.size(20.dp),
+                                        imageVector = Icons.Filled.Delete,
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = stringResource(R.string.eliminar)
+                                    )
+                                }
+                            }
+                        }else{
                             Button(
                                 onClick = {
                                     onEliminarPulsado(perfil)
@@ -259,26 +281,6 @@ fun PantallaProfesor(
                                     contentDescription = stringResource(R.string.eliminar)
                                 )
                             }
-                        }
-                    }else{
-                        Button(
-                            onClick = {
-                                onEliminarPulsado(perfil)
-                            },
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 10.dp,
-                                pressedElevation = 15.dp,
-                                disabledElevation = 0.dp
-                            ),
-                            colors = ButtonColors(Color.Red, Color.Black, Color.Red, Color.Black),
-                            modifier = Modifier.padding(16.dp, 32.dp, 0.dp, 0.dp)
-                        ) {
-                            Image(
-                                modifier= Modifier.size(20.dp),
-                                imageVector = Icons.Filled.Delete,
-                                contentScale = ContentScale.Crop,
-                                contentDescription = stringResource(R.string.eliminar)
-                            )
                         }
                     }
                     if(profesor.idProfesor!=0){
