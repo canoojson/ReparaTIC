@@ -367,7 +367,8 @@ fun ReparaTICApp(
                         incidencia = Incidencia(
                             idIncidencia = 0, tipo = "", fecha_incidencia = "", profesor = null,
                             departamento = null, ubicacion = null, descripcion = "", fecha_introduccion = getFechaActual(),
-                            comentarios = emptyList(), fecha_resolucion = "", tiempo_invertido = "00:00:00", responsable = null, estado = null, mas_info = null, observaciones = "",
+                            comentarios = emptyList(), fecha_resolucion = "", tiempo_invertido = "00:00:00",
+                            responsable = null, estado = null, mas_info = null, observaciones = "",
                             incidenciaHardware = null, incidenciaSoftware = null),
                         login = viewModelLogin.login,
                         uiStatePro = uiStateProfesor,

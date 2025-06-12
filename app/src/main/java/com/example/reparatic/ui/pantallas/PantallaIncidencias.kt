@@ -60,7 +60,9 @@ fun PantallaIncidencias(
 
     LazyColumn(modifier = modifier) {
         items(lista){ incidencia ->
-            if(login.rol!!.permisos.contains(permiso)){
+            if(login.rol!!.permisos.contains(permiso) ||
+                incidencia.profesor?.idProfesor == login.idProfesor ||
+                incidencia.responsable?.idProfesor == login.idProfesor){
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -101,48 +103,7 @@ fun PantallaIncidencias(
                         }
                     }
                 }
-            }else{
-                if(incidencia.profesor?.idProfesor == login.idProfesor || incidencia.responsable?.idProfesor == login.idProfesor){
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onIncidenciaPulsada(incidencia)
-                            }
-                            .padding(8.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ){
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Row {
-                                    Text(text = incidencia.descripcion)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "#"+incidencia.idIncidencia.toString(),
-                                        color = Color.Gray,
-                                        fontSize = 14.sp)
-                                }
-                                Text(text = (incidencia.profesor?.nombre ?:"Profesor eliminado") + " " + (incidencia.profesor?.apellidos ?: "o no disponible"))
-                                Text(text = incidencia.fecha_incidencia.toString())
-                            }
-                            Column(horizontalAlignment = Alignment.End,
-                                verticalArrangement = Arrangement.Center,
-                                modifier = modifier.fillMaxWidth()
-                            )
-                            {
-                                Text(text = (incidencia.responsable?.nombre?: "Sin") + " " + (incidencia.responsable?.apellidos?:"Asignar"))
-                                Text(text = incidencia.estado?.descrip?:"Sin estado")
-                                Text(text = incidencia.ubicacion!!.nombre)
-                            }
-                        }
-                    }
-                }
             }
-
         }
     }
 }

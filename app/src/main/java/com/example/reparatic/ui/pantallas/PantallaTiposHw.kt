@@ -112,7 +112,7 @@ fun TipoHwDialog(
     var nombreTipoHw by remember { mutableStateOf(tipoHw.descrip) }
     var tipoHwActualizado by remember { mutableStateOf(TiposHw(idTipoHw = tipoHw.idTipoHw, descrip = nombreTipoHw)) }
     val contexto = LocalContext.current
-    val permiso = Permiso(codPermiso = 12, descrip = "Modificar/Eliminar departamentos")
+    val permiso = Permiso(codPermiso = 3, descrip = "Añadir, borrar o modificar tipos de Hw")
     var error by remember { mutableStateOf(false) }
 
     Dialog(
